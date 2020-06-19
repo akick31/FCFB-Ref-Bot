@@ -63,144 +63,144 @@ def representsInt(string):
         return False
 
 """
+Get the column number to find the result
+
+"""
+def getColNum(offensivePlaybook, defensivePlaybook, playType):
+    # Passing values
+    if((offensivePlaybook == "option" or offensivePlaybook == "west coast" or offensivePlaybook == "pro")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "pass"):
+        return 0
+    elif((offensivePlaybook == "option" or offensivePlaybook == "west coast")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "pass"):
+        return 4
+    elif((offensivePlaybook == "option" or offensivePlaybook == "west coast")
+       and (defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "pass"):
+        return 8
+    elif((offensivePlaybook == "option")
+       and (defensivePlaybook == "3-4")
+       and playType == "pass"):
+        return 12
+    elif((offensivePlaybook == "option")
+       and (defensivePlaybook == "3-3-5")
+       and playType == "pass"):
+        return 16
+    elif((offensivePlaybook == "west coast" or offensivePlaybook == "pro" or offensivePlaybook == "spread")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "pass"):
+        return 20
+    elif((offensivePlaybook == "west coast" or offensivePlaybook == "pro")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "pass"):
+        return 24
+    elif((offensivePlaybook == "pro" or offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "pass"):
+        return 28
+    elif((offensivePlaybook == "pro" or offensivePlaybook == "spread")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "pass"):
+        return 32
+    elif((offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3")
+       and playType == "pass"):
+        return 40
+    elif((offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "pass"):
+        return 44
+    elif((offensivePlaybook == "air raid") 
+       and (defensivePlaybook == "5-2")
+       and playType == "pass"):
+        return 48
+    elif((offensivePlaybook == "air raid") 
+       and (defensivePlaybook == "4-4")
+       and playType == "pass"):
+        return 52
+    
+    #Rushing Values
+    if((offensivePlaybook == "option" or offensivePlaybook == "west coast" or offensivePlaybook == "pro")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "run"):
+        return 56
+    elif((offensivePlaybook == "option" or offensivePlaybook == "west coast")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "run"):
+        return 60
+    elif((offensivePlaybook == "option" or offensivePlaybook == "west coast")
+       and (defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "run"):
+        return 64
+    elif((offensivePlaybook == "option")
+       and (defensivePlaybook == "3-4")
+       and playType == "run"):
+        return 68
+    elif((offensivePlaybook == "option")
+       and (defensivePlaybook == "3-3-5")
+       and playType == "run"):
+        return 72
+    elif((offensivePlaybook == "west coast" or offensivePlaybook == "pro" or offensivePlaybook == "spread")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "run"):
+        return 76
+    elif((offensivePlaybook == "west coast" or offensivePlaybook == "pro")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "run"):
+        return 80
+    elif((offensivePlaybook == "pro" or offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
+       and playType == "run"):
+        return 84
+    elif((offensivePlaybook == "pro" or offensivePlaybook == "spread")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "run"):
+        return 88
+    elif((offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3")
+       and playType == "run"):
+        return 96
+    elif((offensivePlaybook == "spread" or offensivePlaybook == "air raid")
+       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
+       and playType == "run"):
+        return 100
+    elif((offensivePlaybook == "air raid") 
+       and (defensivePlaybook == "5-2")
+       and playType == "run"):
+        return 104
+    elif((offensivePlaybook == "air raid") 
+       and (defensivePlaybook == "4-4")
+       and playType == "run"):
+        return 108
+    else:
+        return -69
+
+    
+"""
 Get the matchup's play result and time
 
 """
 def getPlayResult(resultColumn, timeColumn, minColumn, maxColumn, difference):  
     for i in range(len(minColumn)):
         if(representsInt(minColumn[i]) == True and representsInt(maxColumn[i]) == True 
-           and int(minColumn[i]) <= difference and int(maxColumn[i]) >= difference):
+           and int(minColumn[i]) <= int(difference) and int(maxColumn[i]) >= int(difference)):
             return {0: resultColumn[i], 1: int(timeColumn[i])}
-    return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"}
-
-
+    return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"}        
+  
 """
-Get the column number to find the result
+Get the final result to send to discord
 
-"""
-def getColNum(offensivePlaybook, defensivePlaybook, playType):
-    # Passing values
-    if((offensivePlaybook == "Option" or offensivePlaybook == "West Coast" or offensivePlaybook == "Pro")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Pass"):
-        return 0
-    elif((offensivePlaybook == "Option" or offensivePlaybook == "West Coast")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Pass"):
-        return 4
-    elif((offensivePlaybook == "Option" or offensivePlaybook == "West Coast")
-       and (defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Pass"):
-        return 8
-    elif((offensivePlaybook == "Option")
-       and (defensivePlaybook == "3-4")
-       and playType == "Pass"):
-        return 12
-    elif((offensivePlaybook == "Option")
-       and (defensivePlaybook == "3-3-5")
-       and playType == "Pass"):
-        return 16
-    elif((offensivePlaybook == "West Coast" or offensivePlaybook == "Pro" or offensivePlaybook == "Spread")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Pass"):
-        return 20
-    elif((offensivePlaybook == "West Coast" or offensivePlaybook == "Pro")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Pass"):
-        return 24
-    elif((offensivePlaybook == "Pro" or offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Pass"):
-        return 28
-    elif((offensivePlaybook == "Pro" or offensivePlaybook == "Spread")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Pass"):
-        return 32
-    elif((offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3")
-       and playType == "Pass"):
-        return 40
-    elif((offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Pass"):
-        return 44
-    elif((offensivePlaybook == "Air Raid") 
-       and (defensivePlaybook == "5-2")
-       and playType == "Pass"):
-        return 48
-    elif((offensivePlaybook == "Air Raid") 
-       and (defensivePlaybook == "4-4")
-       and playType == "Pass"):
-        return 52
-    
-    #Rushing Values
-    if((offensivePlaybook == "Option" or offensivePlaybook == "West Coast" or offensivePlaybook == "Pro")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Run"):
-        return 56
-    elif((offensivePlaybook == "Option" or offensivePlaybook == "West Coast")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Run"):
-        return 60
-    elif((offensivePlaybook == "Option" or offensivePlaybook == "West Coast")
-       and (defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Run"):
-        return 64
-    elif((offensivePlaybook == "Option")
-       and (defensivePlaybook == "3-4")
-       and playType == "Run"):
-        return 68
-    elif((offensivePlaybook == "Option")
-       and (defensivePlaybook == "3-3-5")
-       and playType == "Run"):
-        return 72
-    elif((offensivePlaybook == "West Coast" or offensivePlaybook == "Pro" or offensivePlaybook == "Spread")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Run"):
-        return 76
-    elif((offensivePlaybook == "West Coast" or offensivePlaybook == "Pro")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Run"):
-        return 80
-    elif((offensivePlaybook == "Pro" or offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3" or defensivePlaybook == "3-3-5")
-       and playType == "Run"):
-        return 84
-    elif((offensivePlaybook == "Pro" or offensivePlaybook == "Spread")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Run"):
-        return 88
-    elif((offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "5-2" or defensivePlaybook == "4-3")
-       and playType == "Run"):
-        return 96
-    elif((offensivePlaybook == "Spread" or offensivePlaybook == "Air Raid")
-       and (defensivePlaybook == "4-4" or defensivePlaybook == "3-4")
-       and playType == "Run"):
-        return 100
-    elif((offensivePlaybook == "Air Raid") 
-       and (defensivePlaybook == "5-2")
-       and playType == "Run"):
-        return 104
-    elif((offensivePlaybook == "Air Raid") 
-       and (defensivePlaybook == "4-4")
-       and playType == "Run"):
-        return 108
-    else:
-        return -69
-    
-        
-              
-if __name__ == '__main__':
-    colNumber = getColNum("West Coast", "4-4", "Pass")
+"""            
+def getFinalResult(offensivePlaybook, defensivePlaybook, playType, difference):
+    colNumber = getColNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
     if(colNumber != -69):
         resultColumn = getResultColumn(colNumber)
         timeColumn = getTimeColumn(colNumber)
         minColumn = getMinRangeColumn(colNumber)
         maxColumn = getMaxRangeColumn(colNumber)
-        difference = 286
         result = getPlayResult(resultColumn, timeColumn, minColumn, maxColumn, difference)
-        print(result[0])
-        print(result[1])
+        return result
     else:
-        print("ERROR IN GETTING PLAYBOOK MATCHUP")
+        return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
