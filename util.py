@@ -1,3 +1,4 @@
+import re
 from game_database_functions import updateTime
 from game_database_functions import updateQuarter
 from game_database_functions import updateGameStatus
@@ -28,7 +29,33 @@ Check if a string has a number, useful for determining if play call is valid
 """
 def hasNumbers(inputString):
     return any(char.isdigit() for char in inputString)
-    
+
+ 
+"""
+Convert field position to 0-100
+
+"""
+def convertYardLine(gameInfo):
+    yardLine = gameInfo["yard line"] 
+    convertedYardLine = 100
+    if(gameInfo["possession"] == gameInfo["home name"]):
+        if gameInfo["home name"] == yardLine.rsplit(' ', 1):
+            numList = list(map(int, re.findall(r'\d+', yardLine)))
+            convertedYardLine = 100-numList[0]
+        else:
+            numList = list(map(int, re.findall(r'\d+', yardLine)))
+            convertedYardLine = numList[0]
+    else:
+        if gameInfo["away name"] == yardLine.rsplit(' ', 1):
+            numList = list(map(int, re.findall(r'\d+', yardLine)))
+            convertedYardLine = 100-numList[0]
+        else:
+            numList = list(map(int, re.findall(r'\d+', yardLine)))
+            convertedYardLine = numList[0]
+    return convertedYardLine
+        
+
+
 """
 Convert down to show on discord
 

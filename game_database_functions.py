@@ -174,6 +174,19 @@ def getGameInfo(channel):
     
     return gameInfo
 
+def updateHomeScore(channel, score):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 7).value = score # home score
+    openpyxlGameWorkbook.save('game_database.xlsx')
+
 def updateHomeTimeouts(channel, timeouts):
     rowNum = 0
     for cell in ongoingGames['A']:
@@ -185,6 +198,19 @@ def updateHomeTimeouts(channel, timeouts):
     rowNum = rowNum + 1
     
     ongoingGames.cell(row = rowNum, column = 8).value = timeouts # home timeouts
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+def updateAwayScore(channel, score):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 19).value = score # away score
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateAwayTimeouts(channel, timeouts):
@@ -360,6 +386,59 @@ def updateOnsideKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     
     ongoingGames.cell(row = rowNum, column = 30).value = yardLine # yard line
     openpyxlGameWorkbook.save('game_database.xlsx')
+
+    
+"""
+Update the ball location
+
+"""
+def updateBallLocation(channel, yardLine):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 30).value = yardLine # yard line
+    openpyxlGameWorkbook.save('game_database.xlsx')
+
+
+"""
+Update the down
+
+"""    
+def updateDown(channel, down):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 31).value = down # down
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+"""
+Update the distance
+
+"""    
+def updateDistance(channel, distance):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 32).value = distance # distance
+    openpyxlGameWorkbook.save('game_database.xlsx') 
     
     
 """

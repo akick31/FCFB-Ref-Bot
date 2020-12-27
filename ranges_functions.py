@@ -1,5 +1,7 @@
 import xlrd
 from util import representsInt
+from util import convertYardLine
+from game_database_functions import getGameInfo
 from game_database_functions import updateClockStopped
 
 rangesWorkbook = xlrd.open_workbook(r'ranges.xlsx')
@@ -257,8 +259,7 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
             return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
         
     elif playType == "field goal":
-        resultRow = getFGResultRow(matchupColumnNum, difference)
-        result = getFGResult(resultRow)
+        result = getFGResult(message, difference)
         
         if(str(result) != "Kick 6"):
             time = 5
@@ -269,7 +270,7 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
         return {0: result, 1: int(time) + clockRunoff} 
     
     elif playType == "punt":
-        resultRow = getPuntResultRow(matchupColumnNum, difference)
+        resultRow = getPuntResultRow(message, difference)
         result = getPuntResult(resultRow)
         
         time = 15
@@ -291,36 +292,51 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
 #########################
 #       FIELD GOAL      #
 #########################
-        
-def getFGResult(row):
-    resultColumn = []
-    for i in range(ranges.nrows):
-        resultColumn.append(ranges.cell_value(i, 0))
-    return resultColumn[row]
 
-def getFGResultRow(matchupColumnNum, difference):  
-    matchupColumn = []
-    resultsColumn = []
-    resultRow = 0
+def getFGResult(message, difference):  
+    distanceColumn = []
+    madeColumn = []
+    missColumn = []
+    blockedColumn = []
+    kickSixColumn = []
+    
+    gameInfo = getGameInfo(message.channel)
+    yardLine = convertYardLine(gameInfo)
 
-    for i in range(ranges.nrows):
-        matchupColumn.append(ranges.cell_value(i, matchupColumnNum))
-        resultsColumn.append(ranges.cell_value(i, 0))
+    for i in range(fieldgoalRanges.nrows):
+        distanceColumn.append(ranges.cell_value(i, 0))
+        madeColumn.append(ranges.cell_value(i, 1))
+        missColumn.append(ranges.cell_value(i, 2))
+        blockedColumn.append(ranges.cell_value(i, 3))
+        kickSixColumn.append(ranges.cell_value(i, 4))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
-    for i in range(4, len(matchupColumn)):
-        if "-" in str(matchupColumn[i]):
-            minNum = int(matchupColumn[i].split("-")[0])
-            maxNum = int(matchupColumn[i].split("-")[1])
+    fieldGoalDistance = int(yardLine) + 17
+    
+    # Iterate through each row in the column and fine what bucket the distance falls into
+    for i in range(4, len(distanceColumn)):
+        if fieldGoalDistance == distanceColumn[i]:
+            minNum = int(madeColumn[i].split("-")[0])
+            maxNum = int(madeColumn[i].split("-")[1])
             if difference >= minNum and difference <= maxNum:
-                resultRow = i
+                return "Made"
                 break
-        elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
-            if matchupColumn[i] == difference:
-                resultRow = i
-                break
-                
-    return resultRow   
+            if "-" in str(missColumn[i]):
+                minNum = int(madeColumn[i].split("-")[0])
+                maxNum = int(madeColumn[i].split("-")[1])
+                if difference >= minNum and difference <= maxNum:
+                    return "Miss"
+            if "-" in str(blockedColumn[i]):
+                minNum = int(blockedColumn[i].split("-")[0])
+                maxNum = int(blockedColumn[i].split("-")[1])
+                if difference >= minNum and difference <= maxNum:
+                    return "Blocked"
+            if "-" in str(kickSixColumn[i]):
+                minNum = int(kickSixColumn[i].split("-")[0])
+                maxNum = int(kickSixColumn[i].split("-")[1])
+                if difference >= minNum and difference <= maxNum:
+                    return "Kick 6"
+        else:
+            return "Miss"
         
     
 
@@ -328,31 +344,80 @@ def getFGResultRow(matchupColumnNum, difference):
 #        PUNTS          #
 #########################
 
+"""
+Iterate through the rows and get the result
+
+"""
 def getPuntResult(row):
     resultColumn = []
-    for i in range(ranges.nrows):
-        resultColumn.append(ranges.cell_value(i, 0))
+    for i in range(puntRanges.nrows):
+        resultColumn.append(puntRanges.cell_value(i, 0))
     return resultColumn[row]
 
-def getPuntResultRow(matchupColumnNum, difference):  
-    matchupColumn = []
+"""
+Get the bucket that the field position is in
+
+"""
+def getFieldPositionColumnNum(yardLine):
+    if yardLine <= 100 and yardLine >= 66:
+        return 1
+    elif yardLine <= 65 and yardLine >= 61:
+        return 2
+    elif yardLine <= 60 and yardLine >= 56:
+        return 3
+    elif yardLine <= 55 and yardLine >= 51:
+        return 4
+    elif yardLine <= 50 and yardLine >= 46:
+        return 5
+    elif yardLine <= 45 and yardLine >= 41:
+        return 6
+    elif yardLine <= 40 and yardLine >= 36:
+        return 7
+    elif yardLine <= 35 and yardLine >= 31:
+        return 8
+    elif yardLine <= 30 and yardLine >= 26:
+        return 9
+    elif yardLine <= 25 and yardLine >= 21:
+        return 10
+    elif yardLine <= 20 and yardLine >= 15:
+        return 11
+    elif yardLine <= 15 and yardLine >= 11:
+        return 12
+    elif yardLine <= 10 and yardLine >= 6:
+        return 13
+    elif yardLine <= 5 and yardLine >= 1:
+        return 14
+    else:
+        return -1
+
+"""
+Get the row that the result is in the spreadsheet
+
+"""
+def getPuntResultRow(message, difference): 
+    gameInfo = getGameInfo(message.channel)
+    yardLine = convertYardLine(gameInfo)
+    
+    fieldPositionColumnNum = getFieldPositionColumnNum(yardLine)
+
+    fieldPositionColumn = []
     resultsColumn = []
     resultRow = 0
 
-    for i in range(ranges.nrows):
-        matchupColumn.append(ranges.cell_value(i, matchupColumnNum))
-        resultsColumn.append(ranges.cell_value(i, 0))
+    for i in range(puntRanges.nrows):
+        fieldPositionColumn.append(puntRanges.cell_value(i, fieldPositionColumnNum))
+        resultsColumn.append(puntRanges.cell_value(i, 0))
         
     # Iterate through each row in the column and fine what bucket the difference falls into
-    for i in range(4, len(matchupColumn)):
-        if "-" in str(matchupColumn[i]):
-            minNum = int(matchupColumn[i].split("-")[0])
-            maxNum = int(matchupColumn[i].split("-")[1])
+    for i in range(4, len(fieldPositionColumn)):
+        if "-" in str(fieldPositionColumn[i]):
+            minNum = int(fieldPositionColumn[i].split("-")[0])
+            maxNum = int(fieldPositionColumn[i].split("-")[1])
             if difference >= minNum and difference <= maxNum:
                 resultRow = i
                 break
-        elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
-            if matchupColumn[i] == difference:
+        elif "-" not in str(fieldPositionColumn[i]) and "N/A" not in str(fieldPositionColumn[i]):
+            if fieldPositionColumn[i] == difference:
                 resultRow = i
                 break
                 

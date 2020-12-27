@@ -12,9 +12,14 @@ from game_database_functions import updateDefensiveNumber
 from game_database_functions import updateNormalKickoffBallLocation
 from game_database_functions import updateSquibKickoffBallLocation
 from game_database_functions import updateOnsideKickoffBallLocation
+from game_database_functions import updateBallLocation
 from game_database_functions import updatePlayType
 from game_database_functions import updateWaitingOn
 from game_database_functions import updateClockStopped
+from game_database_functions import updateDown
+from game_database_functions import updateDistance
+from game_database_functions import updateHomeScore
+from game_database_functions import updateAwayScore
 from game_database_functions import getGameInfo
 from game_database_functions import getGameInfoDM
 from util import messageUser
@@ -24,6 +29,7 @@ from util import hasNumbers
 from util import calculateDifference
 from util import convertTime
 from util import convertDown
+from util import representsInt
 
 guildID = 723390838167699508
 
@@ -243,9 +249,78 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                 else:
                     clockStopped = "YES"
                 result = getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped)
+               
                 # Update the time and game information
                 time = convertTime(message.channel, gameInfo, result[1])
-            
+                
+                offenseTeam = ""
+                defenseTeam = ""
+                
+                if(gameInfo["possession"] == gameInfo["home name"]):
+                    offenseTeam = gameInfo["home name"]
+                    defenseTeam = gameInfo["away name"]
+                else:
+                    offenseTeam = gameInfo["away name"]
+                    defenseTeam = gameInfo["home name"]
+                
+                if(playType == "run"):
+                    playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                elif(playType == "pass"):
+                    playType = "pass"
+                elif(playType == "punt"):
+                    playType = "punt"
+                elif(playType == "field goal"):
+                    playType = "field goal"
+                elif(playType == "kneel"):
+                    playType = "kneel"
+                elif(playType == "spike"):
+                    playType = "spike"
+
+"""
+Update everything based on the play result
+
+"""                
+def playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference):
+    finalResult = ""
+    homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
+    awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
+    # If it's not a standard gain
+    if(representsInt(result[0]) == False):
+        if result[0] == "Pick/Fumble 6":
+            await defensiveTouchdown(message, gameInfo, result, playType, homeDiscordUser, offenseTeam, defenseTeam, difference)
+        
+
+"""
+Handle defensive touchdowns
+
+"""       
+async def defensiveTouchdown(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
+    if playType == "pass":
+        finalResult = defenseTeam + " takes it back for a Pick Six\n"
+    else:
+        finalResult = defenseTeam + " takes it back for a Scoop 'N Score\n"
+    updateClockStopped(message.channel, "YES")
+    updatePossession(message.channel, defenseTeam)
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")
+    updateBallLocation(message.channel, offenseTeam + "3")
+    updatePlayType(message.channel, "TOUCHDOWN")
+    if offenseTeam == gameInfo["home name"]:
+        updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
+    elif offenseTeam == gameInfo["away name"]:
+        updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
+    
+    gameInfo = getGameInfo(message.channel)
+    
+    await message.channel.send("OH NO! " + offenseTeam.upper() + " GIVES UP THE BALL! " + defenseTeam.upper() + "HAS IT AND THEY'RE WEAVING DOWNFIELD AND THEY TAKE IT TO THE HOUSE! TOUCHDOWN " + defenseTeam.upper() + "!!!\n\n"
+                               + "**Result:** " + finalResult
+                               + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
+                               + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
+                               + "**Difference:** " + str(difference) + "\n\n\n" 
+                               + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
+                               + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
+                               + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + defenseTeam + " :football:\n"
+                               + "Waiting on " + offenseUser.mention + " for a number.")
             
 """
 Handle kickoff returns
@@ -331,7 +406,13 @@ async def fumbleReturnKickoff(client, message, gameInfo, result, playType, diffe
                                + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + kickingTeam + " :football:\n"
                                + "Waiting on " + returnUser.mention + " for a number.")
     await messageUser(client, returnUser, gameInfo, time) 
+    if kickingTeam == gameInfo["home name"]:
+        updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
+    elif kickingTeam == gameInfo["away name"]:
+        updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
     updatePlayType(message.channel, "TOUCHDOWN")
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")
 
 """
 Handle a fumble on a kickoff
@@ -359,6 +440,8 @@ async def fumbleKickoff(client, message, gameInfo, result, playType, difference,
                                + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + kickingTeam + " :football:\n"
                                + "Waiting on " + returnUser.mention + " for a number.")
     await messageUser(client, returnUser, gameInfo, time)
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")
     updatePlayType(message.channel, "NORMAL")
                 
 """
@@ -399,7 +482,13 @@ async def normalKickoff(client, message, gameInfo, result, playType, difference,
                                    + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + returnTeam + " :football:\n"
                                    + "Waiting on " + kickingUser.mention + " for a number.")
         updatePlayType(message.channel, "TOUCHDOWN")
-    await messageUser(client, kickingUser, gameInfo, time)       
+        if returnTeam == gameInfo["home name"]:
+            updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
+        elif returnTeam == gameInfo["away name"]:
+            updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
+    await messageUser(client, kickingUser, gameInfo, time)  
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")     
                 
 
    
