@@ -200,7 +200,7 @@ def getPlayResultRow(matchupColumnNum, difference):
         if "-" in str(matchupColumn[i]):
             minNum = int(matchupColumn[i].split("-")[0])
             maxNum = int(matchupColumn[i].split("-")[1])
-            if difference > minNum and difference < maxNum:
+            if difference >= minNum and difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
@@ -208,13 +208,41 @@ def getPlayResultRow(matchupColumnNum, difference):
                 resultRow = i
                 break
                 
-    return resultRow            
+    return resultRow   
+
+"""
+Get the matchup's kickoff result and time
+
+"""
+def getKickoffResultRow(difference):  
+    differencesColumn = []
+    resultsColumn = []
+    resultRow = 0
+
+    for i in range(kickoffPATRanges.nrows):
+        differencesColumn.append(kickoffPATRanges.cell_value(i, 1))
+        resultsColumn.append(kickoffPATRanges.cell_value(i, 0))
+        
+    # Iterate through each row in the column and fine what bucket the difference falls into
+    for i in range(7, len(differencesColumn)):
+        if "-" in str(differencesColumn[i]):
+            minNum = int(differencesColumn[i].split("-")[0])
+            maxNum = int(differencesColumn[i].split("-")[1])
+            if difference >= minNum and difference <= maxNum:
+                resultRow = i
+                break
+        elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
+            if differencesColumn[i] == difference:
+                resultRow = i
+                break
+                
+    return resultRow         
   
 """
-Get the final result to send to discord
+Get the final play result to send to discord
 
 """            
-def getFinalResult(offensivePlaybook, defensivePlaybook, playType, difference):
+def getFinalPlayResult(offensivePlaybook, defensivePlaybook, playType, difference):
     matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
     if(matchupColumnNum != -69):
         resultRow = getPlayResultRow(matchupColumnNum, difference)
@@ -223,3 +251,31 @@ def getFinalResult(offensivePlaybook, defensivePlaybook, playType, difference):
         return {0: result, 1: time} 
     else:
         return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
+  
+"""
+Get the kickoff time 
+
+"""   
+def getKickoffTime(row):
+    timeColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        timeColumn.append(kickoffPATRanges.cell_value(i, 3))
+    return timeColumn[row]
+
+"""
+Get the kickoff result
+
+"""
+def getKickoffResult(row):
+    resultColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        resultColumn.append(kickoffPATRanges.cell_value(i, 0))
+    return resultColumn[row]
+   
+
+def getFinalKickoffResult(playType, difference):
+    resultRow = getKickoffResultRow(difference)
+    result = getKickoffResult(resultRow)
+    time = getKickoffTime(resultRow)
+    print(time)
+    return {0: result, 1: time} 
