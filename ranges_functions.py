@@ -1,4 +1,6 @@
 import xlrd
+from util import representsInt
+from game_database_functions import updateClockStopped
 
 rangesWorkbook = xlrd.open_workbook(r'ranges.xlsx')
 ranges = rangesWorkbook.sheet_by_index(0)
@@ -33,6 +35,10 @@ def getTime(row):
     for i in range(ranges.nrows):
         timeColumn.append(ranges.cell_value(i, 26))
     return timeColumn[row]
+
+#########################
+#      NORMAL PLAY      #
+#########################
 
 """
 Get the column number to find the result
@@ -214,15 +220,149 @@ def getPlayResultRow(matchupColumnNum, difference):
 Get the final play result to send to discord
 
 """            
-def getFinalPlayResult(offensivePlaybook, defensivePlaybook, playType, difference):
-    matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
-    if(matchupColumnNum != -69):
-        resultRow = getPlayResultRow(matchupColumnNum, difference)
-        result = getResult(resultRow)
-        time = getTime(resultRow)
-        return {0: result, 1: time} 
-    else:
-        return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
+def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped):
+    clockRunoff = 0
+    
+    # Add clock runoff
+    if clockStopped == "NO":
+        if clockRunoffType == "normal":
+            if offensivePlaybook == "flexbone":
+                clockRunoff = 20
+            if offensivePlaybook == "west coast":
+                clockRunoff = 17
+            if offensivePlaybook == "pro":
+                clockRunoff = 15
+            if offensivePlaybook == "spread":
+                clockRunoff = 13
+            if offensivePlaybook == "air raid":
+                clockRunoff = 10
+        elif clockRunoffType == "chew":
+            clockRunoff = 30
+        elif clockRunoffType == "hurry":
+            clockRunoff = 7
+            
+    if playType == "run" or playType == "pass":
+        matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
+        if(matchupColumnNum != -69):
+            resultRow = getPlayResultRow(matchupColumnNum, difference)
+            result = getResult(resultRow)
+
+            if(representsInt(result) == False):
+                if str(result) == "Incompletion":
+                    updateClockStopped(message.channel, "YES")
+
+            time = getTime(resultRow)
+            return {0: result, 1: int(time) + clockRunoff} 
+        else:
+            return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
+        
+    elif playType == "field goal":
+        resultRow = getFGResultRow(matchupColumnNum, difference)
+        result = getFGResult(resultRow)
+        
+        if(str(result) != "Kick 6"):
+            time = 5
+        else:
+            time = 13
+            
+        updateClockStopped(message.channel, "YES")
+        return {0: result, 1: int(time) + clockRunoff} 
+    
+    elif playType == "punt":
+        resultRow = getPuntResultRow(matchupColumnNum, difference)
+        result = getPuntResult(resultRow)
+        
+        time = 15
+        updateClockStopped(message.channel, "YES")
+        return {0: result, 1: int(time) + clockRunoff}  
+        
+    elif playType == "spike":
+        result = "Incompletion"
+        time = 3
+        updateClockStopped(message.channel, "YES")
+        return {0: result, 1: time}  
+        
+    elif playType == "kneel":
+        result = "-2"
+        time = 40
+        updateClockStopped(message.channel, "NO")
+        return {0: result, 1: time}  
+    
+#########################
+#       FIELD GOAL      #
+#########################
+        
+def getFGResult(row):
+    resultColumn = []
+    for i in range(ranges.nrows):
+        resultColumn.append(ranges.cell_value(i, 0))
+    return resultColumn[row]
+
+def getFGResultRow(matchupColumnNum, difference):  
+    matchupColumn = []
+    resultsColumn = []
+    resultRow = 0
+
+    for i in range(ranges.nrows):
+        matchupColumn.append(ranges.cell_value(i, matchupColumnNum))
+        resultsColumn.append(ranges.cell_value(i, 0))
+        
+    # Iterate through each row in the column and fine what bucket the difference falls into
+    for i in range(4, len(matchupColumn)):
+        if "-" in str(matchupColumn[i]):
+            minNum = int(matchupColumn[i].split("-")[0])
+            maxNum = int(matchupColumn[i].split("-")[1])
+            if difference >= minNum and difference <= maxNum:
+                resultRow = i
+                break
+        elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
+            if matchupColumn[i] == difference:
+                resultRow = i
+                break
+                
+    return resultRow   
+        
+    
+
+#########################
+#        PUNTS          #
+#########################
+
+def getPuntResult(row):
+    resultColumn = []
+    for i in range(ranges.nrows):
+        resultColumn.append(ranges.cell_value(i, 0))
+    return resultColumn[row]
+
+def getPuntResultRow(matchupColumnNum, difference):  
+    matchupColumn = []
+    resultsColumn = []
+    resultRow = 0
+
+    for i in range(ranges.nrows):
+        matchupColumn.append(ranges.cell_value(i, matchupColumnNum))
+        resultsColumn.append(ranges.cell_value(i, 0))
+        
+    # Iterate through each row in the column and fine what bucket the difference falls into
+    for i in range(4, len(matchupColumn)):
+        if "-" in str(matchupColumn[i]):
+            minNum = int(matchupColumn[i].split("-")[0])
+            maxNum = int(matchupColumn[i].split("-")[1])
+            if difference >= minNum and difference <= maxNum:
+                resultRow = i
+                break
+        elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
+            if matchupColumn[i] == difference:
+                resultRow = i
+                break
+                
+    return resultRow       
+    
+
+#########################
+#        KICKOFFS       #
+#########################
+
     
 """
 Get the matchup's normal kickoff result and time
@@ -368,20 +508,23 @@ def getOnsideKickoffResult(row):
         resultColumn.append(kickoffPATRanges.cell_value(i, 6))
     return resultColumn[row]
    
+"""
+Get and return the kickoff result
 
+"""
 def getFinalKickoffResult(playType, difference):
     if(playType.lower() == "normal"):
         resultRow = getNormalKickoffResultRow(difference)
         result = getNormalKickoffResult(resultRow)
         time = getNormalKickoffTime(resultRow)
-    if(playType.lower() == "squib"):
+    elif(playType.lower() == "squib"):
         resultRow = getSquibKickoffResultRow(difference)
         result = getSquibKickoffResult(resultRow)
         time = getSquibKickoffTime(resultRow)
-    if(playType.lower() == "normal"):
+    elif(playType.lower() == "onside"):
         resultRow = getOnsideKickoffResultRow(difference)
         result = getOnsideKickoffResult(resultRow)
         time = getOnsideKickoffTime(resultRow)
-    
-    print(time)
+    if representsInt(result):
+        result = int(result)
     return {0: result, 1: time} 

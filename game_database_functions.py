@@ -58,9 +58,10 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 36).value = 0 # offensive number
     ongoingGames.cell(row = rowNum, column = 37).value = 0 # defensive number
     ongoingGames.cell(row = rowNum, column = 38).value = "PLAYING" # game status
+    ongoingGames.cell(row = rowNum, column = 39).value = "YES" # clock stopped
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-def getGameInfoUser(user):
+def getGameInfoDM(user):
     rowNum = 0
     found = 0
     for cell in ongoingGames['D']:
@@ -116,7 +117,8 @@ def getGameInfoUser(user):
                "play type": ongoingGames.cell(row = rowNum, column = 35).value,
                "offensive number": ongoingGames.cell(row = rowNum, column = 36).value,
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
-               "game status": ongoingGames.cell(row = rowNum, column = 38).value}
+               "game status": ongoingGames.cell(row = rowNum, column = 38).value,
+               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value}
     
     return gameInfo
 
@@ -167,9 +169,36 @@ def getGameInfo(channel):
                "play type": ongoingGames.cell(row = rowNum, column = 35).value,
                "offensive number": ongoingGames.cell(row = rowNum, column = 36).value,
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
-               "game status": ongoingGames.cell(row = rowNum, column = 38).value}
+               "game status": ongoingGames.cell(row = rowNum, column = 38).value,
+               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value}
     
     return gameInfo
+
+def updateHomeTimeouts(channel, timeouts):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 8).value = timeouts # home timeouts
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+def updateAwayTimeouts(channel, timeouts):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 20).value = timeouts # away timeouts
+    openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateCoinTossWinner(channel, winner):
     rowNum = 0
@@ -351,6 +380,31 @@ def updatePossession(channel, possessingTeam):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 """
+Update the team waiting on
+
+"""    
+def updateWaitingOn(channel):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    waitingOn = "NO ONE"
+    
+    gameInfo = getGameInfo(channel)
+    if(gameInfo["possession"] == gameInfo["home name"]):
+        waitingOn = gameInfo["away user"]
+    elif(gameInfo["possession"] == gameInfo["away name"]):
+        waitingOn = gameInfo["home user"]
+    
+    ongoingGames.cell(row = rowNum, column = 34).value = waitingOn # waiting on
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+"""
 Update the play type
 
 """    
@@ -416,4 +470,21 @@ def updateGameStatus(channel, status):
     rowNum = rowNum + 1
     
     ongoingGames.cell(row = rowNum, column = 38).value = status # possession
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+"""
+Update the game clock stopped flag
+
+"""    
+def updateClockStopped(channel, status):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 39).value = status # possession
     openpyxlGameWorkbook.save('game_database.xlsx')

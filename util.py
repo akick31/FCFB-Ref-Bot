@@ -29,6 +29,20 @@ Check if a string has a number, useful for determining if play call is valid
 def hasNumbers(inputString):
     return any(char.isdigit() for char in inputString)
     
+"""
+Convert down to show on discord
+
+"""
+def convertDown(down):
+    if down == "1":
+        down = "1st"
+    elif down == "2":
+        down = "2nd"
+    elif down == "3":
+        down = "3rd"
+    elif down == "4":
+        down = "4th"
+    return down
 
 """
 Get the user object
@@ -47,18 +61,20 @@ Message the defending team
 
 """
 async def messageUser(client, discordUser, gameInfo, time):
-    directMessage = ("\n\n\n**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                            + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                            + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :football: | " + str(gameInfo["yard line"]) + "\n\n\n"
-                            + "Please submit a number between 1-1500, inclusive")
+    down = convertDown(str(gameInfo["down"]))
+    
+    directMessage = ("\n\n\n**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
+                     + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
+                     + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + str(gameInfo["possession"]) + " :football:\n\n"
+                     + "Please submit a number between 1-1500, inclusive")
     await discordUser.send(directMessage)
     
 """
 Send confirmation of the user's defensive number
 
 """
-async def messageConfirmationUser(client, discordUser, gameInfo):
-    directMessage = ("I have " + str(gameInfo["defensive number"]) + " as your number")
+async def messageConfirmationUser(client, discordUser, number):
+    directMessage = ("I have " + str(number) + " as your number")
     await discordUser.send(directMessage)
     
     
@@ -96,8 +112,8 @@ def convertTime(channel, gameInfo, timeOff):
         updateQuarter(channel, quarter)
         updateTime(channel, finalTime)
     else:
-        minutes = time / 60
-        seconds = time % 60
+        minutes = int(time / 60)
+        seconds = int(time % 60)
         finalTime = str(minutes) + ":" + str(seconds)
         updateTime(channel, finalTime)
         
