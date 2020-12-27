@@ -208,13 +208,27 @@ def getPlayResultRow(matchupColumnNum, difference):
                 resultRow = i
                 break
                 
-    return resultRow   
+    return resultRow          
+  
+"""
+Get the final play result to send to discord
+
+"""            
+def getFinalPlayResult(offensivePlaybook, defensivePlaybook, playType, difference):
+    matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
+    if(matchupColumnNum != -69):
+        resultRow = getPlayResultRow(matchupColumnNum, difference)
+        result = getResult(resultRow)
+        time = getTime(resultRow)
+        return {0: result, 1: time} 
+    else:
+        return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
+    
+"""
+Get the matchup's normal kickoff result and time
 
 """
-Get the matchup's kickoff result and time
-
-"""
-def getKickoffResultRow(difference):  
+def getNormalKickoffResultRow(difference):  
     differencesColumn = []
     resultsColumn = []
     resultRow = 0
@@ -236,46 +250,138 @@ def getKickoffResultRow(difference):
                 resultRow = i
                 break
                 
-    return resultRow         
+    return resultRow  
   
 """
-Get the final play result to send to discord
-
-"""            
-def getFinalPlayResult(offensivePlaybook, defensivePlaybook, playType, difference):
-    matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
-    if(matchupColumnNum != -69):
-        resultRow = getPlayResultRow(matchupColumnNum, difference)
-        result = getResult(resultRow)
-        time = getTime(resultRow)
-        return {0: result, 1: time} 
-    else:
-        return {0: "DID NOT FIND PLAY", 1: "DID NOT FIND TIME"} 
-  
-"""
-Get the kickoff time 
+Get the normal kickoff time 
 
 """   
-def getKickoffTime(row):
+def getNormalKickoffTime(row):
     timeColumn = []
     for i in range(kickoffPATRanges.nrows):
         timeColumn.append(kickoffPATRanges.cell_value(i, 3))
     return timeColumn[row]
 
 """
-Get the kickoff result
+Get the normal kickoff result
 
 """
-def getKickoffResult(row):
+def getNormalKickoffResult(row):
     resultColumn = []
     for i in range(kickoffPATRanges.nrows):
         resultColumn.append(kickoffPATRanges.cell_value(i, 0))
     return resultColumn[row]
+
+"""
+Get the matchup's squib kickoff result and time
+
+"""
+def getSquibKickoffResultRow(difference):  
+    differencesColumn = []
+    resultsColumn = []
+    resultRow = 0
+
+    for i in range(kickoffPATRanges.nrows):
+        differencesColumn.append(kickoffPATRanges.cell_value(i, 4))
+        resultsColumn.append(kickoffPATRanges.cell_value(i, 3))
+        
+    # Iterate through each row in the column and fine what bucket the difference falls into
+    for i in range(7, len(differencesColumn)):
+        if "-" in str(differencesColumn[i]):
+            minNum = int(differencesColumn[i].split("-")[0])
+            maxNum = int(differencesColumn[i].split("-")[1])
+            if difference >= minNum and difference <= maxNum:
+                resultRow = i
+                break
+        elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
+            if differencesColumn[i] == difference:
+                resultRow = i
+                break
+                
+    return resultRow  
+  
+"""
+Get the squib kickoff time 
+
+"""   
+def getSquibKickoffTime(row):
+    timeColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        timeColumn.append(kickoffPATRanges.cell_value(i, 5))
+    return timeColumn[row]
+
+"""
+Get the squib kickoff result
+
+"""
+def getSquibKickoffResult(row):
+    resultColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        resultColumn.append(kickoffPATRanges.cell_value(i, 3))
+    return resultColumn[row]
+
+"""
+Get the matchup's onside kickoff result and time
+
+"""
+def getOnsideKickoffResultRow(difference):  
+    differencesColumn = []
+    resultsColumn = []
+    resultRow = 0
+
+    for i in range(kickoffPATRanges.nrows):
+        differencesColumn.append(kickoffPATRanges.cell_value(i, 7))
+        resultsColumn.append(kickoffPATRanges.cell_value(i, 6))
+        
+    # Iterate through each row in the column and fine what bucket the difference falls into
+    for i in range(7, len(differencesColumn)):
+        if "-" in str(differencesColumn[i]):
+            minNum = int(differencesColumn[i].split("-")[0])
+            maxNum = int(differencesColumn[i].split("-")[1])
+            if difference >= minNum and difference <= maxNum:
+                resultRow = i
+                break
+        elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
+            if differencesColumn[i] == difference:
+                resultRow = i
+                break
+                
+    return resultRow  
+  
+"""
+Get the onside kickoff time 
+
+"""   
+def getOnsideKickoffTime(row):
+    timeColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        timeColumn.append(kickoffPATRanges.cell_value(i, 8))
+    return timeColumn[row]
+
+"""
+Get the onside kickoff result
+
+"""
+def getOnsideKickoffResult(row):
+    resultColumn = []
+    for i in range(kickoffPATRanges.nrows):
+        resultColumn.append(kickoffPATRanges.cell_value(i, 6))
+    return resultColumn[row]
    
 
 def getFinalKickoffResult(playType, difference):
-    resultRow = getKickoffResultRow(difference)
-    result = getKickoffResult(resultRow)
-    time = getKickoffTime(resultRow)
+    if(playType.lower() == "normal"):
+        resultRow = getNormalKickoffResultRow(difference)
+        result = getNormalKickoffResult(resultRow)
+        time = getNormalKickoffTime(resultRow)
+    if(playType.lower() == "squib"):
+        resultRow = getSquibKickoffResultRow(difference)
+        result = getSquibKickoffResult(resultRow)
+        time = getSquibKickoffTime(resultRow)
+    if(playType.lower() == "normal"):
+        resultRow = getOnsideKickoffResultRow(difference)
+        result = getOnsideKickoffResult(resultRow)
+        time = getOnsideKickoffTime(resultRow)
+    
     print(time)
     return {0: result, 1: time} 
