@@ -1,5 +1,4 @@
 import openpyxl
-from util import *
 
 openpyxlGameWorkbook = openpyxl.load_workbook('game_database.xlsx')
 ongoingGames = openpyxlGameWorkbook.worksheets[0]
@@ -212,7 +211,7 @@ def updateQuarter(channel, quarter):
             
     rowNum = rowNum + 1
     
-    ongoingGames.cell(row = rowNum, column = 28).value = time # coin toss decision
+    ongoingGames.cell(row = rowNum, column = 28).value = quarter # coin toss decision
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 """
@@ -355,7 +354,7 @@ def updatePossession(channel, possessingTeam):
 Update the play type
 
 """    
-def updatePlayType(channel, number):
+def updatePlayType(channel, playType):
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -365,7 +364,7 @@ def updatePlayType(channel, number):
             
     rowNum = rowNum + 1
     
-    ongoingGames.cell(row = rowNum, column = 35).value = status # play type
+    ongoingGames.cell(row = rowNum, column = 35).value = playType # play type
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 """

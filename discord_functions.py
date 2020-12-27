@@ -1,10 +1,15 @@
 import discord
-import re
-from ranges_functions import *
-from util import *
-from game_database_functions import *
-from user_database_functions import *
-from game_functions import *
+from user_database_functions import getUser
+from user_database_functions import getNickname
+from user_database_functions import getOffensivePlaybook
+from user_database_functions import getDefensivePlaybook
+from game_database_functions import addGameToDatabase
+from ranges_functions import getFinalKickoffResult
+from game_functions import game
+from game_functions import gameDM
+from util import calculateDifference
+from util import representsInt
+from util import getDiscordUser
 
 """
 Handle the Discord side of the bot. Look for messages and post responses
@@ -184,44 +189,6 @@ def getCategory(client, categoryName):
             return category
     return "COULD NOT FIND"
 
-"""
-Get the user object
-
-"""
-def getDiscordUser(client, user):
-    guild = client.get_guild(guildID)
-    for member in guild.members:
-        if member.name == user.split("#")[0]:
-            return member
-    return "COULD NOT FIND"
-
-"""
-Check if a string has a number, useful for determining if play call is valid
-
-"""
-def hasNumbers(inputString):
-    return any(char.isdigit() for char in inputString)
-
-
-"""
-Message the defending team
-
-"""
-async def messageUser(client, discordUser, gameInfo, time):
-    directMessage = ("\n\n\n**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                            + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                            + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :football: | " + str(gameInfo["yard line"]) + "\n\n\n"
-                            + "Please submit a number between 1-1500, inclusive")
-    await discordUser.send(directMessage)
-    
-"""
-Send confirmation of the user's defensive number
-
-"""
-async def messageConfirmationUser(client, discordUser, gameInfo):
-    directMessage = ("I have " + str(gameInfo["defensive number"]) + " as your number")
-    await discordUser.send(directMessage)
-    
 
 """
 Login to Discord and run the bot
@@ -230,7 +197,6 @@ Login to Discord and run the bot
 def loginDiscord():
     intents = discord.Intents.all()
     client = discord.Client(intents=intents)
-    guild = client.get_guild(guildID)
 
     @client.event
     async def on_message(message):
@@ -268,298 +234,14 @@ def loginDiscord():
                     await message.channel.send(helpMessage)
                 
             else:
-                # Get the game info for the channel
-                gameInfo = getGameInfo(message.channel)
-                homeDiscordUser = getDiscordUser(client, gameInfo["home user"])
-                awayDiscordUser = getDiscordUser(client, gameInfo["away user"])
+                # The message is for a game, handle game logic
+                await game(client, message)
                 
-                
-                # Handle coin toss winner
-                if (str(message.author) == str(gameInfo["away user"]) and ('head' in message.content or 'tail' in message.content) and gameInfo["coin toss winner"] == "NONE"):
-                    result = coinToss(gameInfo["home user"], gameInfo["away user"], message)
-                    if result == "heads, home wins":
-                        await message.channel.send("It is heads, " + homeDiscordUser.mention + " you have won the toss. Do you wish to **receive** or **defer** to the second half?")
-                        updateCoinTossWinner(message.channel, gameInfo["home user"])
-                    if result == "tails, home wins":
-                        await message.channel.send("It is tails, " + homeDiscordUser.mention  + " you have won the toss. Do you wish to **receive** or **defer** to the second half?")
-                        updateCoinTossWinner(message.channel, gameInfo["home user"])
-                    if result == "heads, away wins":
-                        await message.channel.send("It is heads, " + awayDiscordUser.mention  + " you have won the toss. Do you wish to **receive** or **defer** to the second half?")
-                        updateCoinTossWinner(message.channel, gameInfo["away user"])
-                    if result == "tails, away wins":
-                        await message.channel.send("It is tails, " + awayDiscordUser.mention  + " you have won the toss. Do you wish to **receive** or **defer** to the second half?")
-                        updateCoinTossWinner(message.channel, gameInfo["away user"])
-                
-                # Handle coin toss decision
-                if (str(message.author) == str(gameInfo["coin toss winner"]) and ('receive' in message.content or 'defer' in message.content) and gameInfo["coin toss decision"] == "NONE"):
-                    if (message.content.lower() != "receive" and message.content.lower() != "defer"):
-                        await message.channel.send("I did not understand your decision, please try again")
-                    elif "receive" in message.content.lower().strip():
-                        await message.channel.send(message.author.mention + " chooses to receive. Waiting on a kickoff number from them")
-                        updateCoinTossDecision(message.channel, "receive")
-                        if (str(message.author) == str(gameInfo["home user"])):
-                            updatePossession(message.channel, str(gameInfo["away name"]))
-                            await messageUser(client, homeDiscordUser, gameInfo, "7:00")
-                        else: 
-                            updatePossession(message.channel, str(gameInfo["home name"]))
-                            await messageUser(client, awayDiscordUser, gameInfo, "7:00")
-                    elif "defer" in message.content.lower().strip():
-                        await message.channel.send(message.author.mention + " chooses to defer to the second half. Waiting on a kickoff number from their opponent")
-                        updateCoinTossDecision(message.channel, "defer")  
-                        if (str(message.author) == str(gameInfo["home user"])):
-                            updatePossession(message.channel, str(gameInfo["home name"]))
-                            await messageUser(client, awayDiscordUser, gameInfo, "7:00")
-                        else:
-                            updatePossession(message.channel, str(gameInfo["away name"]))
-                            await messageUser(client, homeDiscordUser, gameInfo, "7:00")
-                
-                # Handle kickoffs after player has been DMed
-                if (gameInfo["play type"] == "KICKOFF" and ((str(message.author) == str(gameInfo["home user"]) and gameInfo["possession"] == gameInfo["home name"] and gameInfo["waiting on"] == gameInfo["home name"]) 
-                    or (str(message.author) == str(gameInfo["away user"]) and gameInfo["possession"] == gameInfo["away name"] and gameInfo["waiting on"] == gameInfo["away name"]))):
-                    if "normal" not in message.content.lower() or "squib" not in message.content.lower() or "onside" not in message.content.lower():
-                        await message.channel.send("I could not find a play in your message, please try again and submit **normal**, **squib**, or **onside**")
-                    elif hasNumbers(message.content) == False:
-                        await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-                    elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-                        await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-                    else:
-                        numList = list(map(int, re.findall(r'\d+', message.content)))
-                        number = numList[0]
-                        if number < 1 or number > 1500:
-                             await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
-                        else:
-                            offensiveNumber = number
-                            updateOffensiveNumber(message.channel, offensiveNumber)
-                            defensiveNumber = gameInfo["defensive number"]
-                            difference = calculateDifference(offensiveNumber, defensiveNumber)
-                            playType = ""
-                            if("normal" in message.content.lower()):
-                                playType = "normal"
-                            elif("onside" in message.content.lower()):
-                                playType = "onside"
-                            elif("squib" in message.content.lower()):
-                                playType = "squib"
-    
-                            # Invalid difference
-                            if difference == -1:
-                                await message.channel.send("There was an issue calculating the difference, please contact Dick")
-                            else:
-                                result = getFinalKickoffResult(playType, difference)
-                                time = convertTime(message.channel, gameInfo, result[1])
-                                gameInfo = getGameInfo(message.channel)
-                                # Return team doesn't fumble (Away team kicks off)
-                                if str(result[0]) != "Fumble" and str(result[0]) != "Touchdown" and gameInfo["possession"] == gameInfo["home name"]:
-                                    updatePossession(message.channel, str(gameInfo["home name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    if str(result[0]) != "Returned TD":
-                                        await message.channel.send("It's a kickoff taken by " + str(gameInfo["home name"]).upper() + " to the " + str(result[0]) + "\n\n"
-                                                                   + "RESULT: Return to the " + str(result[0]) + "\n"
-                                                                   + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                                   + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                                   + "Difference: " + difference + "\n\n\n" 
-                                                                   + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                                   + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball: | " + str(gameInfo["yard line"]) + "\n"
-                                                                   + "Waiting on " + awayDiscordUser.mention + " for a number.")
-                                        updatePlayType(message.channel, "NORMAL")
-                                    else: 
-                                        await message.channel.send("It's a kickoff taken by " + str(gameInfo["home name"]).upper() + " to the 20.... NO WAIT HE BREAKS FREE. HE MAKES THE KICKER MISS. HE WILL GO ALL THE WAY! TOUCHDOWN!!!\n\n"
-                                                                   + "RESULT: Return Touchdown\n"
-                                                                   + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                                   + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                                   + "Difference: " + difference + "\n\n\n" 
-                                                                   + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                                   + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
-                                                                   + "Waiting on " + awayDiscordUser.mention + " for a number.")
-                                        updatePlayType(message.channel, "TOUCHDOWN")
-                                    await messageUser(client, awayDiscordUser, gameInfo, time)
-                                
-                                # Return team doesn't fumble (Home team kicks off)
-                                if str(result[0]) != "Fumble" and str(result[0]) != "Touchdown" and gameInfo["possession"] == gameInfo["away name"]:
-                                    updatePossession(message.channel, str(gameInfo["away name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    if str(result[0]) != "Returned TD":
-                                        await message.channel.send("It's a kickoff taken by " + str(gameInfo["away name"]).upper() + " to the " + str(result[0]) + "\n\n"
-                                                               + "RESULT: Return to the " + str(result[0]) + "\n"
-                                                               + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                               + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                               + "Difference: " + difference + "\n\n\n" 
-                                                               + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                               + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
-                                                               + "Waiting on " + homeDiscordUser.mention + " for a number.")
-                                        updatePlayType(message.channel, "NORMAL")
-                                    else: 
-                                        await message.channel.send("It's a kickoff taken by " + str(gameInfo["away name"]).upper() + " to the 20.... NO WAIT HE BREAKS FREE. HE MAKES THE KICKER MISS. HE WILL GO ALL THE WAY! TOUCHDOWN!!!\n\n"
-                                                                   + "RESULT: Return Touchdown\n"
-                                                                   + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                                   + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                                   + "Difference: " + difference + "\n\n\n" 
-                                                                   + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                                   + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
-                                                                   + "Waiting on " + homeDiscordUser.mention + " for a number.")                        
-                                        updatePlayType(message.channel, "TOUCHDOWN")
-                                    await messageUser(client, homeDiscordUser, gameInfo, time) 
-                
-                                
-                                # Return team fumbles on the 20 (Away team kicks off)
-                                if str(result[0]) == "Fumble" and gameInfo["possession"] == gameInfo["home name"]:
-                                    updatePossession(message.channel, str(gameInfo["away name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    await message.channel.send("OH NO! " + str(gameInfo["home name"]).upper() + " FUMBLES THE BALL ON THE 20 AND " + str(gameInfo["away name"]).upper() + "HAS IT!\n\n"
-                                                               + "RESULT: Fumble\n"
-                                                               + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                               + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                               + "Difference: " + difference + "\n\n\n" 
-                                                               + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                               + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
-                                                               + "Waiting on " + homeDiscordUser.mention + " for a number.")
-                                    await messageUser(client, homeDiscordUser, gameInfo, time)
-                                    updatePlayType(message.channel, "NORMAL")
-                                
-                                # Return team fumbles on the 20 (Home team kicks off)
-                                if str(result[0]) == "Fumble" and gameInfo["possession"] == gameInfo["away name"]:
-                                    updatePossession(message.channel, str(gameInfo["home name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    await message.channel.send("OH NO! " + str(gameInfo["home name"]).upper() + " FUMBLES THE BALL ON THE 20 AND " + str(gameInfo["away name"]).upper() + "HAS IT!\n\n"
-                                                               + "RESULT: Fumble\n"
-                                                               + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                               + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                               + "Difference: " + difference + "\n\n\n" 
-                                                               + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                               + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
-                                                               + "Waiting on " + awayDiscordUser.mention + " for a number.")
-                                    await messageUser(client, awayDiscordUser, time)
-                                    updatePlayType(message.channel, "NORMAL")
-                                
-                                
-                                # Return team fumbles and the kicking team scores a TD (Away team kicks off)
-                                if str(result[0]) == "Touchdown" and gameInfo["possession"] == gameInfo["home name"]:
-                                    updatePossession(message.channel, str(gameInfo["away name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    await message.channel.send("OH NO! " + str(gameInfo["away name"]).upper() + " FUMBLES THE BALL ON THE 20 AND " + str(gameInfo["home name"]).upper() + "TAKES IT TO THE HOUSE!\n\n"
-                                                               + "RESULT: Return team touchdown\n"
-                                                               + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                               + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                               + "Difference: " + difference + "\n\n\n" 
-                                                               + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                               + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
-                                                               + "Waiting on " + homeDiscordUser.mention + " for a number.")
-                                    await messageUser(client, homeDiscordUser, gameInfo, time) 
-                                    updatePlayType(message.channel, "TOUCHDOWN")
-                                    
-                                # Return team fumbles and the kicking team scores a TD (Home team kicks off)
-                                if str(result[0]) == "Touchdown" and gameInfo["possession"] == gameInfo["away name"]:
-                                    updatePossession(message.channel, str(gameInfo["home name"]))
-                                    if(playType == "normal"): 
-                                        updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "squib"): 
-                                        updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    elif(playType == "onside"): 
-                                        updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
-                                    await message.channel.send("OH NO! " + str(gameInfo["home name"]).upper() + " FUMBLES THE BALL ON THE 20 AND " + str(gameInfo["away name"]).upper() + "TAKES IT TO THE HOUSE!\n\n"
-                                                               + "RESULT: Return team touchdown\n"
-                                                               + "Offensive Number: " + str(gameInfo["offensive number"]) + "\n" 
-                                                               + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
-                                                               + "Difference: " + difference + "\n\n\n" 
-                                                               + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                                               + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
-                                                               + "Waiting on " + awayDiscordUser.mention + " for a number.")
-                                    await messageUser(client, awayDiscordUser, gameInfo, time) 
-                                    updatePlayType(message.channel, "TOUCHDOWN")
-                                                        
-        # Message is from the DM
+                                                   
+        # Message is from the DM for a game
         else:
-            gameInfo = getGameInfoUser(message.author)
-            homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
-            awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
-            if(homeDiscordUser != "COULD NOT FIND" and awayDiscordUser != "COULD NOT FIND"):
-                if hasNumbers(message.content) == False:
-                    if gameInfo["possession"] == gameInfo["home name"]:
-                        await awayDiscordUser.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-                    if gameInfo["possession"] == gameInfo["away name"]:
-                        await homeDiscordUser.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-                elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-                    if gameInfo["possession"] == gameInfo["home name"]:
-                       await awayDiscordUser.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-                    if gameInfo["possession"] == gameInfo["away name"]:
-                       await homeDiscordUser.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-                else:
-                    numList = list(map(int, re.findall(r'\d+', message.content)))
-                    number = numList[0]
-                    if number < 1 or number > 1500:
-                         await message.author.send("Your number is not valid, please try again and submit a number between 1-1500")
-                    else:
-                        updateDefensiveNumber(gameInfo["channel id"], number)
-                        gameInfo = getGameInfoUser(message.author)
-                        
-                        guild = client.get_guild(guildID)
-                        gameChannel = None
-                        for channel in guild.channels:
-                            homeTeam = str(gameInfo["home name"])
-                            awayTeam = str(gameInfo["away name"])
-                            name = homeTeam.lower() + " vs " + awayTeam.lower()
-                            channelName = name.replace(" ", "-")
-                            if channel.name == channelName:
-                                gameChannel = channel
-                                break
-                            
-
-                        if(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "KICKOFF"):
-                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **normal**, **onside**, or **squib**")
-                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
-                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
-                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **normal**, **onside**, or **squib**")
-                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
-                        elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL"):
-                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **run**, **pass**, **punt**, or **field goal**")
-                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
-                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "NORMAL"):
-                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **run**, **pass**, **punt**, or **field goal**")
-                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
-                        elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "TOUCHDOWN"):
-                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **PAT** or **Two Point**")
-                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
-                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "TOUCHDOWN"):
-                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                        + "Please submit either **PAT** or **Two Point**")
-                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
+            await gameDM(client, message)
+            
     @client.event
     async def on_ready():
         print('------')
