@@ -1,4 +1,5 @@
 import discord
+import re
 from ranges_functions import *
 from util import *
 from game_database_functions import *
@@ -208,9 +209,17 @@ Message the defending team
 """
 async def messageUser(client, discordUser, gameInfo, time):
     directMessage = ("\n\n\n**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                            + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                            + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                             + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :football: | " + str(gameInfo["yard line"]) + "\n\n\n"
                             + "Please submit a number between 1-1500, inclusive")
+    await discordUser.send(directMessage)
+    
+"""
+Send confirmation of the user's defensive number
+
+"""
+async def messageConfirmationUser(client, discordUser, gameInfo):
+    directMessage = ("I have " + str(gameInfo["defensive number"]) + " as your number")
     await discordUser.send(directMessage)
     
 
@@ -354,7 +363,7 @@ def loginDiscord():
                                                                    + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                    + "Difference: " + difference + "\n\n\n" 
                                                                    + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                    + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball: | " + str(gameInfo["yard line"]) + "\n"
                                                                    + "Waiting on " + awayDiscordUser.mention + " for a number.")
                                         updatePlayType(message.channel, "NORMAL")
@@ -365,7 +374,7 @@ def loginDiscord():
                                                                    + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                    + "Difference: " + difference + "\n\n\n" 
                                                                    + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                    + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
                                                                    + "Waiting on " + awayDiscordUser.mention + " for a number.")
                                         updatePlayType(message.channel, "TOUCHDOWN")
@@ -387,7 +396,7 @@ def loginDiscord():
                                                                + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                + "Difference: " + difference + "\n\n\n" 
                                                                + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
                                                                + "Waiting on " + homeDiscordUser.mention + " for a number.")
                                         updatePlayType(message.channel, "NORMAL")
@@ -398,7 +407,7 @@ def loginDiscord():
                                                                    + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                    + "Difference: " + difference + "\n\n\n" 
                                                                    + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                                   + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                    + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
                                                                    + "Waiting on " + homeDiscordUser.mention + " for a number.")                        
                                         updatePlayType(message.channel, "TOUCHDOWN")
@@ -420,7 +429,7 @@ def loginDiscord():
                                                                + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                + "Difference: " + difference + "\n\n\n" 
                                                                + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
                                                                + "Waiting on " + homeDiscordUser.mention + " for a number.")
                                     await messageUser(client, homeDiscordUser, gameInfo, time)
@@ -441,7 +450,7 @@ def loginDiscord():
                                                                + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                + "Difference: " + difference + "\n\n\n" 
                                                                + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
                                                                + "Waiting on " + awayDiscordUser.mention + " for a number.")
                                     await messageUser(client, awayDiscordUser, time)
@@ -463,7 +472,7 @@ def loginDiscord():
                                                                + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                + "Difference: " + difference + "\n\n\n" 
                                                                + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["away name"]) + " :ball:\n"
                                                                + "Waiting on " + homeDiscordUser.mention + " for a number.")
                                     await messageUser(client, homeDiscordUser, gameInfo, time) 
@@ -484,7 +493,7 @@ def loginDiscord():
                                                                + "Defensive Number: " + str(gameInfo["defensive number"]) + "\n" 
                                                                + "Difference: " + difference + "\n\n\n" 
                                                                + " **" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | **" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + "\n"  
-                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts:" + str(gameInfo["away timeouts"]) + "\n"  
+                                                               + "Timeouts: " + str(gameInfo["home timeouts"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
                                                                + str(time) + " | Quarter: " + str(gameInfo["quarter"]) + " | " + str(gameInfo["home name"]) + " :ball:\n"
                                                                + "Waiting on " + awayDiscordUser.mention + " for a number.")
                                     await messageUser(client, awayDiscordUser, gameInfo, time) 
@@ -493,38 +502,64 @@ def loginDiscord():
         # Message is from the DM
         else:
             gameInfo = getGameInfoUser(message.author)
-            homeDiscordUser = getDiscordUser(client, gameInfo["home user"])
-            awayDiscordUser = getDiscordUser(client, gameInfo["away user"])
-            if hasNumbers(message.content) == False:
-                await message.author.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-            elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-                await message.author.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-            else:
-                numList = list(map(int, re.findall(r'\d+', message.content)))
-                number = numList[0]
-                if number < 1 or number > 1500:
-                     await message.author.send("Your number is not valid, please try again and submit a number between 1-1500")
+            homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
+            awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
+            if(homeDiscordUser != "COULD NOT FIND" and awayDiscordUser != "COULD NOT FIND"):
+                if hasNumbers(message.content) == False:
+                    if gameInfo["possession"] == gameInfo["home name"]:
+                        await awayDiscordUser.send("I could not find a number in your message, please try again and submit a number between 1-1500")
+                    if gameInfo["possession"] == gameInfo["away name"]:
+                        await homeDiscordUser.send("I could not find a number in your message, please try again and submit a number between 1-1500")
+                elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
+                    if gameInfo["possession"] == gameInfo["home name"]:
+                       await awayDiscordUser.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
+                    if gameInfo["possession"] == gameInfo["away name"]:
+                       await homeDiscordUser.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
                 else:
-                    updateDefensiveNumber(gameInfo["channel id"], number)
-                    if(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "KICKOFF"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **normal**, **onside**, or **squib**")
-                    elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **normal**, **onside**, or **squib**")
-                    elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **run**, **pass**, **punt**, or **field goal**")
-                    elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "NORMAL"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **run**, **pass**, **punt**, or **field goal**")
-                    elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "TOUCHDOWN"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **PAT** or **Two Point**")
-                    elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "TOUCHDOWN"):
-                        gameInfo["channel id"].send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
-                                                    + "Please submit either **PAT** or **Two Point**")
-        
+                    numList = list(map(int, re.findall(r'\d+', message.content)))
+                    number = numList[0]
+                    if number < 1 or number > 1500:
+                         await message.author.send("Your number is not valid, please try again and submit a number between 1-1500")
+                    else:
+                        updateDefensiveNumber(gameInfo["channel id"], number)
+                        gameInfo = getGameInfoUser(message.author)
+                        
+                        guild = client.get_guild(guildID)
+                        gameChannel = None
+                        for channel in guild.channels:
+                            homeTeam = str(gameInfo["home name"])
+                            awayTeam = str(gameInfo["away name"])
+                            name = homeTeam.lower() + " vs " + awayTeam.lower()
+                            channelName = name.replace(" ", "-")
+                            if channel.name == channelName:
+                                gameChannel = channel
+                                break
+                            
+
+                        if(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "KICKOFF"):
+                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **normal**, **onside**, or **squib**")
+                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
+                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
+                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **normal**, **onside**, or **squib**")
+                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
+                        elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL"):
+                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **run**, **pass**, **punt**, or **field goal**")
+                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
+                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "NORMAL"):
+                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **run**, **pass**, **punt**, or **field goal**")
+                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
+                        elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "TOUCHDOWN"):
+                            await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **PAT** or **Two Point**")
+                            await messageConfirmationUser(client, awayDiscordUser, gameInfo)
+                        elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "TOUCHDOWN"):
+                            await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + "you're up!\n\n"
+                                                        + "Please submit either **PAT** or **Two Point**")
+                            await messageConfirmationUser(client, homeDiscordUser, gameInfo)
     @client.event
     async def on_ready():
         print('------')

@@ -355,7 +355,7 @@ def updatePossession(channel, possessingTeam):
 Update the play type
 
 """    
-def updateOffensiveNumber(channel, number):
+def updatePlayType(channel, number):
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -382,7 +382,7 @@ def updateOffensiveNumber(channel, number):
             
     rowNum = rowNum + 1
     
-    ongoingGames.cell(row = rowNum, column = 36).value = status # offensive number
+    ongoingGames.cell(row = rowNum, column = 36).value = number # offensive number
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 """
@@ -392,14 +392,14 @@ Update the defensive number
 def updateDefensiveNumber(channel, number):
     rowNum = 0
     for cell in ongoingGames['A']:
-        if cell.value == str(channel.id):
+        if cell.value == str(channel):
             break
         else:
             rowNum = rowNum + 1
             
     rowNum = rowNum + 1
     
-    ongoingGames.cell(row = rowNum, column = 37).value = status # defensive number
+    ongoingGames.cell(row = rowNum, column = 37).value = number # defensive number
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 """
