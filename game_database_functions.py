@@ -27,7 +27,7 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 5).value = homeTeamInfo["offensive playbook"]
     ongoingGames.cell(row = rowNum, column = 6).value = homeTeamInfo["defensive playbook"]
     ongoingGames.cell(row = rowNum, column = 7).value = 0 # home score
-    ongoingGames.cell(row = rowNum, column = 8).value = 0 # home timeouts
+    ongoingGames.cell(row = rowNum, column = 8).value = 3 # home timeouts
     ongoingGames.cell(row = rowNum, column = 9).value = 0 # home total yards
     ongoingGames.cell(row = rowNum, column = 10).value = 0 # home passing yards
     ongoingGames.cell(row = rowNum, column = 11).value = 0 # home rushing yards
@@ -39,7 +39,7 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 17).value = awayTeamInfo["offensive playbook"]
     ongoingGames.cell(row = rowNum, column = 18).value = awayTeamInfo["defensive playbook"]
     ongoingGames.cell(row = rowNum, column = 19).value = 0 # away score
-    ongoingGames.cell(row = rowNum, column = 20).value = 0 # away timeouts
+    ongoingGames.cell(row = rowNum, column = 20).value = 3 # away timeouts
     ongoingGames.cell(row = rowNum, column = 21).value = 0 # away total yards
     ongoingGames.cell(row = rowNum, column = 22).value = 0 # away passing yards
     ongoingGames.cell(row = rowNum, column = 23).value = 0 # away rushing yards

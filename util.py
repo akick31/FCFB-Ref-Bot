@@ -162,8 +162,12 @@ def convertTime(channel, gameInfo, timeOff):
     else:
         minutes = int(time / 60)
         seconds = int(time % 60)
-        finalTime = str(minutes) + ":" + str(seconds)
-        updateTime(channel, finalTime)
+        if seconds < 10:
+            finalTime = str(minutes) + ":0" + str(seconds)
+            updateTime(channel, finalTime)
+        else:
+            finalTime = str(minutes) + ":" + str(seconds)
+            updateTime(channel, finalTime)
         
     return finalTime
         
