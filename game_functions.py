@@ -253,7 +253,7 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                 result = getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped)
                
                 # Update the time and game information
-                time = convertTime(message.channel, gameInfo, result[1])
+                convertTime(message.channel, gameInfo, result[1])
                 
                 offenseTeam = ""
                 defenseTeam = ""
@@ -266,9 +266,9 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                     defenseTeam = gameInfo["home name"]
                 
                 if(playType == "run"):
-                    playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                    await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
                 elif(playType == "pass"):
-                    playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                    await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
                 elif(playType == "punt"):
                     playType = "punt"
                 elif(playType == "field goal"):
@@ -282,8 +282,7 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
 Update everything based on the play result
 
 """                
-def playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference):
-    finalResult = ""
+async def playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference):
     if(str(gameInfo["possession"]) == str(gameInfo["home name"])):
         offenseDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
@@ -294,38 +293,38 @@ def playResult(client, message, gameInfo, result, playType, offenseTeam, defense
     # If it's not a standard gain
     if(representsInt(result[0]) == False):
         if str(result[0]) == "Pick/Fumble 6":
-            await defensiveTouchdown(message, gameInfo, result, playType, offenseDiscordUser, offenseTeam, defenseTeam, difference)
+            await defensiveTouchdown(client, message, gameInfo, result, playType, offenseDiscordUser, offenseTeam, defenseTeam, difference)
         elif "TO + " in str(result[0]) or "TO - " in str(result[0]) or "Turnover" in str(result[0]):
-            turnover(message, gameInfo, result, playType, offenseDiscordUser, offenseTeam, defenseTeam, difference)
+            await turnover(client, message, gameInfo, result, playType, offenseDiscordUser, offenseTeam, defenseTeam, difference)
         elif str(result[0]) == "No Gain" or str(result[0]) == "Incompletion" or str(result[0]) == "Touchdown":
-            play(message, gameInfo, result, playType, offenseDiscordUser, defenseDiscordUser, offenseTeam, defenseTeam, difference)
+            await play(client, message, gameInfo, result, playType, offenseDiscordUser, defenseDiscordUser, offenseTeam, defenseTeam, difference)
     else:
-        play(message, gameInfo, result, playType, offenseDiscordUser, defenseDiscordUser, offenseTeam, defenseTeam, difference)
+        await play(client, message, gameInfo, result, playType, offenseDiscordUser, defenseDiscordUser, offenseTeam, defenseTeam, difference)
 
 
 """
 Go through all the play scenarios
 
 """
-def play(message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference):
+async def play(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference):
     if(representsInt(result[0]) == False):
         if(str(result[0]) == "No Gain"):
-            await playType(message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 0)
+            await normalPlayType(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 0)
             updateClockStopped(message.channel, "NO")
         elif(str(result[0]) == "Incompletion"):
-            await playType(message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 0)
+            await normalPlayType(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 0)
             updateClockStopped(message.channel, "YES")
         elif(str(result[0]) == "Touchdown"):
-            await playType(message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 110)
+            await normalPlayType(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, 110)
             updateClockStopped(message.channel, "YES")
     else:
-        await playType(message, gameInfo, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, int(result[0]))
+        await normalPlayType(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, int(result[0]))
         
 """
 Handle play specifics
 
 """ 
-async def playType(message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, yards):
+async def normalPlayType(client, message, gameInfo, result, playType, offenseUser, defenseUser, offenseTeam, defenseTeam, difference, yards):
     finalResult = offenseTeam + " gains " + str(yards) + " yards."
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = yardLine - yards
@@ -335,22 +334,29 @@ async def playType(message, gameInfo, result, playType, offenseUser, defenseUser
         updateBallLocation(message.channel, offenseTeam + " 3")
         updatePlayType(message.channel, "TOUCHDOWN")
         if offenseTeam == gameInfo["home name"]:
-            updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
-        elif offenseTeam == gameInfo["away name"]:
             updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
+        elif offenseTeam == gameInfo["away name"]:
+            updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
         updateClockStopped(message.channel, "YES")
         
         convertTime(message.channel, gameInfo, result[1])
+        updateDown(message.channel, 1)
+        updateDistance(message.channel, 10)
+        gameInfo = getGameInfo(message.channel)
+        down = convertDown(str(gameInfo["down"]))
         
-        await message.channel.send(offenseTeam + " breaks free for a touchdown!\n\n"
-                                   + "**Result:** Touchdown"
+        await message.channel.send(offenseTeam + " breaks free for a touchdown!\n"
+                                   + "**Result:** Touchdown\n"
                                    + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                    + "**Difference:** " + str(difference) + "\n\n\n" 
-                                   + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                                   + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                   + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + offenseTeam + " :football:\n"
-                                   + "Waiting on " + defenseUser.mention + " for a number.")
+                                   + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                   + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"   
+                                   + "The clock is stopped\n"
+                                   + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                   + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                   + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
+        await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
         
     # Handle safety
     elif(updatedYardLine > 100):
@@ -363,16 +369,25 @@ async def playType(message, gameInfo, result, playType, offenseUser, defenseUser
         updateClockStopped(message.channel, "YES")
         
         convertTime(message.channel, gameInfo, result[1])
+                
+        updateDown(message.channel, 1)
+        updateDistance(message.channel, 10)
+        gameInfo = getGameInfo(message.channel)
+        down = convertDown(str(gameInfo["down"]))
         
-        await message.channel.send(offenseTeam + " gets tackled in their endzone for a safety!\n\n"
-                                   + "**Result:** Safety"
+        await message.channel.send(offenseTeam + " gets tackled in their endzone for a safety!\n"
+                                   + "**Result:** Safety\n"
                                    + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                    + "**Difference:** " + str(difference) + "\n\n\n" 
-                                   + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                                   + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                   + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + offenseTeam + " :football:\n"
-                                   + "Waiting on " + defenseUser.mention + " for a number.")
+                                   + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                   + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"
+                                   + "The clock is stopped\n"
+                                   + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                   + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                   + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
+        
+        await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
     
     # Handle a standard play
     else:
@@ -404,41 +419,67 @@ async def playType(message, gameInfo, result, playType, offenseUser, defenseUser
         updateBallLocation(message.channel, newYardLine)
         
         gameInfo = getGameInfo(message.channel)
-        updateClockStopped(message.channel, "YES")
         convertTime(message.channel, gameInfo, result[1])
         
-        await message.channel.send(offenseTeam + " gets a " + yards + " gain.\n\n"
-                                   + "**Result:** " + finalResult
-                                   + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
-                                   + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
-                                   + "**Difference:** " + str(difference) + "\n\n\n" 
-                                   + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                                   + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                   + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + offenseTeam + " :football:\n"
-                                   + "Waiting on " + defenseUser.mention + " for a number.")   
+        incompleteFlag = False
+        if(representsInt(result[0]) == False):
+            if(result[0] == "Incompletion"):
+                incompleteFlag = True
+        
+        down = convertDown(str(gameInfo["down"]))
+        
+        if(incompleteFlag == True): 
+            updateClockStopped(message.channel, "YES")
+            await message.channel.send(offenseTeam + " gets a " + str(yards) + " yard gain.\n\n\n"
+                                       + "**Result:** " + finalResult
+                                       + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
+                                       + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
+                                       + "**Difference:** " + str(difference) + "\n\n\n" 
+                                       + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                       + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"
+                                       + "The clock is stopped\n\n"
+                                       + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                       + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                       + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n") 
+        else:
+            updateClockStopped(message.channel, "NO")
+            await message.channel.send(offenseTeam + " gets a " + str(yards) + " yard gain.\n\n\n"
+                                       + "**Result:** " + finalResult
+                                       + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
+                                       + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
+                                       + "**Difference:** " + str(difference) + "\n\n\n" 
+                                       + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                       + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"
+                                       + "The clock is moving\n\n"
+                                       + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                       + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                       + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
+            
+        
+        await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
 
 
 """
 Go through all the turnover scenarios
 
 """
-def turnover(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
+async def turnover(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
     if(str(result[0]) == "TO + 20 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 20)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 20)
     elif(str(result[0]) == "TO + 15 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 15)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 15)
     elif(str(result[0]) == "TO + 10 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 10)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 10)
     elif(str(result[0]) == "TO + 5 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 5)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 5)
     elif(str(result[0]) == "Turnover"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 0)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, 0)
     elif(str(result[0]) == "TO - 5 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -5)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -5)
     elif(str(result[0]) == "TO - 10 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -10)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -10)
     elif(str(result[0]) == "TO - 15 YDs"):
-        await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -15)
+        await turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -15)
     elif(str(result[0]) == "TO - 20 YDs"):
         await turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, -20)
        
@@ -446,7 +487,7 @@ def turnover(message, gameInfo, result, playType, offenseUser, offenseTeam, defe
 Handle turnovers of specific yardages
 
 """ 
-async def turnoverType(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, turnoverDistance):
+async def turnoverType(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference, turnoverDistance):
     finalResult = defenseTeam + " gets a turnover of " + str(turnoverDistance) + " yards\n"
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100-yardLine
@@ -477,23 +518,28 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
     convertTime(message.channel, gameInfo, result[1])
     
     gameInfo = getGameInfo(message.channel)
+    down = convertDown(str(gameInfo["down"]))
     
-    await message.channel.send("OH NO! " + offenseTeam.upper() + " GIVES UP THE BALL! " + defenseTeam.upper() + "HAS IT!!!\n\n"
+    await message.channel.send("OH NO! " + offenseTeam.upper() + " GIVES UP THE BALL! " + defenseTeam.upper() + "HAS IT!!!\n"
                                + "**Result:** " + finalResult
                                + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                + "**Difference:** " + str(difference) + "\n\n\n" 
-                               + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                               + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                               + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + defenseTeam + " :football:\n"
-                               + "Waiting on " + offenseUser.mention + " for a number.")
+                               + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                               + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"
+                               + "The clock is stopped\n\n"
+                               + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                               + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                               + "\n\nWaiting on " + offenseUser.mention + " for a number.\n\n")
+    
+    await messageUser(client, offenseUser, gameInfo, gameInfo["time"])
 
             
 """
 Handle defensive touchdowns
 
 """       
-async def defensiveTouchdown(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
+async def defensiveTouchdown(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
     if playType == "pass":
         finalResult = defenseTeam + " takes it back for a Pick Six\n"
     else:
@@ -510,16 +556,21 @@ async def defensiveTouchdown(message, gameInfo, result, playType, offenseUser, o
         updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
     
     gameInfo = getGameInfo(message.channel)
+    down = convertDown(str(gameInfo["down"]))
     
-    await message.channel.send("OH NO! " + offenseTeam.upper() + " GIVES UP THE BALL! " + defenseTeam.upper() + "HAS IT AND THEY'RE WEAVING DOWNFIELD AND THEY TAKE IT TO THE HOUSE! TOUCHDOWN " + defenseTeam.upper() + "!!!\n\n"
+    await message.channel.send("OH NO! " + offenseTeam.upper() + " GIVES UP THE BALL! " + defenseTeam.upper() + "HAS IT AND THEY'RE WEAVING DOWNFIELD AND THEY TAKE IT TO THE HOUSE! TOUCHDOWN " + defenseTeam.upper() + "!!!\n"
                                + "**Result:** " + finalResult
                                + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                + "**Difference:** " + str(difference) + "\n\n\n" 
-                               + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                               + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                               + "Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["down"]) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + defenseTeam + " :football:\n"
-                               + "Waiting on " + offenseUser.mention + " for a number.")
+                               + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                               + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + offenseTeam + "\n"
+                               + "The clock is stopped\n\n"
+                               + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                               + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                               + "\n\nWaiting on " + offenseUser.mention + " for a number.\n\n")
+    
+    await messageUser(client, offenseUser, gameInfo, gameInfo["time"]) 
             
 """
 Handle kickoff returns
@@ -592,26 +643,28 @@ async def fumbleReturnKickoff(client, message, gameInfo, result, playType, diffe
     elif(playType == "onside"): 
         updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
     
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")
     gameInfo = getGameInfo(message.channel)
     down = convertDown(str(gameInfo["down"]))
     
-    await message.channel.send("OH NO! " + returnTeam.upper() + " FUMBLES THE BALL ON THE 20 AND " + kickingTeam.upper() + "TAKES IT TO THE HOUSE!\n\n"
+    await message.channel.send("OH NO! " + returnTeam.upper() + " FUMBLES THE BALL ON THE 20 AND " + kickingTeam.upper() + "TAKES IT TO THE HOUSE!\n"
                                + "**Result:** Fumble Touchdown by the Kicking Team\n"
                                + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                + "**Difference:** " + str(difference) + "\n\n\n" 
-                               + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                               + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                               + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + kickingTeam + " :football:\n"
-                               + "Waiting on " + returnUser.mention + " for a number.")
+                               + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                               + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + kickingTeam + "\n"
+                               + "The clock is stopped\n\n"
+                               + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                               + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                               + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
     await messageUser(client, returnUser, gameInfo, time) 
     if kickingTeam == gameInfo["home name"]:
         updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
     elif kickingTeam == gameInfo["away name"]:
         updateAwayScore(message.channel, int(gameInfo["away score"]) + 6)
     updatePlayType(message.channel, "TOUCHDOWN")
-    updateDown(message.channel, "1")
-    updateDistance(message.channel, "10")
 
 """
 Handle a fumble on a kickoff
@@ -627,20 +680,22 @@ async def fumbleKickoff(client, message, gameInfo, result, playType, difference,
         updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
    
     gameInfo = getGameInfo(message.channel)
+    updateDown(message.channel, "1")
+    updateDistance(message.channel, "10")
     down = convertDown(str(gameInfo["down"]))
     
-    await message.channel.send("OH NO! " + returnTeam.upper() + " FUMBLES THE BALL ON THE 20 AND " + kickingTeam.upper() + "HAS IT!\n\n"
+    await message.channel.send("OH NO! " + returnTeam.upper() + " FUMBLES THE BALL ON THE 20 AND " + kickingTeam.upper() + "HAS IT!\n"
                                + "**Result:** Fumble\n"
                                + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                + "**Difference:** " + str(difference) + "\n\n\n" 
-                               + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                               + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                               + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + kickingTeam + " :football:\n"
-                               + "Waiting on " + returnUser.mention + " for a number.")
+                               + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                               + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + kickingTeam + "\n"
+                               + "The clock is stopped\n\n"
+                               + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                               + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                               + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
     await messageUser(client, returnUser, gameInfo, time)
-    updateDown(message.channel, "1")
-    updateDistance(message.channel, "10")
     updatePlayType(message.channel, "NORMAL")
                 
 """
@@ -660,26 +715,30 @@ async def normalKickoff(client, message, gameInfo, result, playType, difference,
     down = convertDown(str(gameInfo["down"]))
         
     if str(result[0]) != "Returned TD":
-        await message.channel.send("It's a kickoff taken by " + returnTeam + " to the " + gameInfo["yard line"] + "\n\n"
+        await message.channel.send("It's a kickoff taken by " + returnTeam + " to the " + gameInfo["yard line"] + "\n"
                                    + "**Result:** Return to the " + gameInfo["yard line"] + "\n"
                                    + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                    + "**Difference:** " + str(difference) + "\n\n\n" 
-                                   + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                                   + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                   + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + returnTeam + " :football:\n"
-                                   + "Waiting on " + kickingUser.mention + " for a number.")
+                                   + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                   + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + returnTeam + "\n"
+                                   + "The clock is stopped\n\n"
+                                   + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                   + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                   + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
         updatePlayType(message.channel, "NORMAL")
     else: 
-        await message.channel.send("It's a kickoff taken by " + returnTeam + " to the 20.... NO WAIT HE BREAKS FREE. HE MAKES THE KICKER MISS. HE WILL GO ALL THE WAY! TOUCHDOWN!!!\n\n"
+        await message.channel.send("It's a kickoff taken by " + returnTeam + " to the 20.... NO WAIT HE BREAKS FREE. HE MAKES THE KICKER MISS. HE WILL GO ALL THE WAY! TOUCHDOWN!!!\n"
                                    + "**Result:** Return Touchdown\n"
                                    + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                    + "**Difference:** " + str(difference) + "\n\n\n" 
-                                   + "**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                                   + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                                   + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + returnTeam + " :football:\n"
-                                   + "Waiting on " + kickingUser.mention + " for a number.")
+                                   + "**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                                   + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + returnTeam + "\n"
+                                   + "The clock is stopped\n\n"
+                                   + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                                   + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                                   + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
         updatePlayType(message.channel, "TOUCHDOWN")
         if returnTeam == gameInfo["home name"]:
             updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)

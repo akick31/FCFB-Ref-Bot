@@ -110,9 +110,10 @@ Message the defending team
 async def messageUser(client, discordUser, gameInfo, time):
     down = convertDown(str(gameInfo["down"]))
     
-    directMessage = ("\n\n\n**" + str(gameInfo["home name"]) + ":** " + str(gameInfo["home score"]) + " | Timeouts: " + str(gameInfo["home timeouts"]) + "\n"
-                     + "**" + str(gameInfo["away name"]) + ":** " + str(gameInfo["away score"]) + " | Timeouts: " + str(gameInfo["away timeouts"]) + "\n"  
-                     + "Q" + str(gameInfo["quarter"])  + " | " + str(time) + " | " + down + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | " + str(gameInfo["possession"]) + " :football:\n\n"
+    directMessage = ("**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                               + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + gameInfo["possession"] + "\n\n"
+                               + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                               + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n\n"
                      + "Please submit a number between 1-1500, inclusive")
     await discordUser.send(directMessage)
     
