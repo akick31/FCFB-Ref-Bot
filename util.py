@@ -53,8 +53,28 @@ def convertYardLine(gameInfo):
             numList = list(map(int, re.findall(r'\d+', yardLine)))
             convertedYardLine = numList[0]
     return convertedYardLine
-        
 
+
+"""
+Convert field position from 0-100
+
+"""
+def convertYardLineBack(yardLine, gameInfo):
+    if(gameInfo["possession"] == gameInfo["home name"]):
+        if int(yardLine) > 50:
+            return gameInfo["home name"] + " " + str(100-yardLine)
+        elif int(yardLine) < 50:
+            return gameInfo["away name"] + " " + str(yardLine)
+        else:
+            return "50"
+    else:
+        if int(yardLine) > 50:
+            return gameInfo["away name"] + " " + str(100-yardLine)
+        elif int(yardLine) < 50:
+            return gameInfo["home name"] + " " + str(yardLine)
+        else:
+            return "50"
+    
 
 """
 Convert down to show on discord
