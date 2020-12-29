@@ -4,6 +4,8 @@ from user_database_functions import getNickname
 from user_database_functions import getOffensivePlaybook
 from user_database_functions import getDefensivePlaybook
 from game_database_functions import addGameToDatabase
+from game_database_functions import copyGameData
+from game_database_functions import pasteGameData
 from ranges_functions import getFinalKickoffResult
 from game_functions import game
 from game_functions import gameDM
@@ -143,7 +145,42 @@ async def handleStartCommand(client, message, category):
     except:
         await message.channel.send(helpMessage)
         return
- 
+    
+    
+"""
+Handle starting the games
+
+"""    
+async def handleEndCommand(client, message, category):
+    if(message.content.startswith('$end')):
+        command = message.content.split('$end')[1].strip()
+    try:
+        # Get all the information necessary to start a game
+        homeTeam = command.split("vs")[0].strip()
+        awayTeam = command.split("vs")[1].strip()
+        
+        gameChannel = None
+        for channel in message.guild.channels:
+            name = homeTeam.lower() + " vs " + awayTeam.lower()
+            channelName = name.replace(" ", "-")
+            if channel.name == channelName:
+                gameChannel = channel
+                break        
+        
+        # Ensure you can only delete in the game channel
+        if gameChannel == message.channel:
+            data = copyGameData(message.channel)
+            pasteGameData(data)
+            gameChannel.delete()
+            return
+        else:
+            await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
+            return
+    except:
+        await message.channel.send(helpMessage)
+        return
+        
+        
 """
 Handle the result command
 
@@ -208,6 +245,7 @@ def loginDiscord():
                     await message.channel.send("===================\nCOMMANDS\n===================\n" 
                                               + "$result\n"
                                               + "$start (only an admin may use this)\n"
+                                              + "$end (only an admin may use this)\n" 
                                               + "$createTeam (only an admin may use this)\n\n"
                                               + "===================\nPLAYBOOK FORMATTING\n===================\n"
                                               + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
@@ -215,6 +253,7 @@ def loginDiscord():
                                               + "===================\nCOMMAND FORMATTING\n===================\n"
                                               + "$result [PLAY TYPE], [OFFENSIVE NUMBER], [DEFENSIVE NUMBER]\n" 
                                               + "$start [HOME TEAM] vs [AWAY TEAM]\n" 
+                                              + "$end [HOME TEAM] vs [AWAY TEAM]\n" 
                                               + "$createTeam [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n")
                                               
                 elif(message.content.startswith('$result')):
@@ -229,6 +268,16 @@ def loginDiscord():
                         await message.channel.send(helpMessage)
                     else:
                         await handleStartCommand(client, message, category)
+                        
+                elif(message.content.startswith('$end')):
+                    if checkRole(message.author, "FCFB Test Admin") == False:
+                        await message.channel.send("You do not have permission to use this command")
+                        
+                    category = getCategory(client, "Games")
+                    if category == "COULD NOT FIND":
+                        await message.channel.send(helpMessage)
+                    else:
+                        await handleEndCommand(client, message, category)
                    
                 elif(message.content.startswith('$')):
                     await message.channel.send(helpMessage)

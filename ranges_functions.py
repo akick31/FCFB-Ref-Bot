@@ -593,3 +593,23 @@ def getFinalKickoffResult(playType, difference):
     if representsInt(result):
         result = int(result)
     return {0: result, 1: time} 
+
+"""
+Get and return the point after attempt result
+
+"""
+def getFinalPointAfterResult(playType, difference):
+    if(playType.lower() == "pat"):
+        if difference >= 0 and difference <= 720:
+            return "Good"
+        elif difference >= 721 and difference <= 747:
+            return "No Good"
+        elif difference >= 748 and difference <= 750:
+            return "Defense 2PT"
+    elif(playType.lower() == "two point"):
+        if difference >= 0 and difference <= 300:
+            return "Good"
+        elif difference >= 301 and difference <= 747:
+            return "No Good"
+        elif difference >= 748 and difference <= 750:
+            return "Defense 2PT"

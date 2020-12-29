@@ -2,6 +2,7 @@ import openpyxl
 
 openpyxlGameWorkbook = openpyxl.load_workbook('game_database.xlsx')
 ongoingGames = openpyxlGameWorkbook.worksheets[0]
+finishedGames = openpyxlGameWorkbook.worksheets[1]
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -567,3 +568,43 @@ def updateClockStopped(channel, status):
     
     ongoingGames.cell(row = rowNum, column = 39).value = status # possession
     openpyxlGameWorkbook.save('game_database.xlsx')
+  
+"""
+Copy the game data to a list
+
+"""
+def copyGameData(channel):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    data = []
+    
+    for i in range(0,40):
+        cellValue = ongoingGames.cell(row = rowNum, column = i).value
+        if cellValue == None or cellValue == "" or cellValue == " ":
+            break
+        else:
+            data[i] = cellValue
+    return data
+
+"""
+Paste the game data in a new location
+
+"""
+def pasteGameData(data):
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == None or cell.value == "":
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    for i in range(0,len(data)):
+        ongoingGames.cell(row = rowNum, column = i).value = data[i]

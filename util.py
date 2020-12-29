@@ -2,6 +2,7 @@ import re
 from game_database_functions import updateTime
 from game_database_functions import updateQuarter
 from game_database_functions import updateGameStatus
+from game_database_functions import getGameInfo
 
 guildID = 723390838167699508
 
@@ -39,14 +40,14 @@ def convertYardLine(gameInfo):
     yardLine = gameInfo["yard line"] 
     convertedYardLine = 100
     if(gameInfo["possession"] == gameInfo["home name"]):
-        if gameInfo["home name"] == yardLine.rsplit(' ', 1):
+        if gameInfo["home name"] == yardLine.rsplit(' ', 1)[0]:
             numList = list(map(int, re.findall(r'\d+', yardLine)))
             convertedYardLine = 100-numList[0]
         else:
             numList = list(map(int, re.findall(r'\d+', yardLine)))
             convertedYardLine = numList[0]
     else:
-        if gameInfo["away name"] == yardLine.rsplit(' ', 1):
+        if gameInfo["away name"] == yardLine.rsplit(' ', 1)[0]:
             numList = list(map(int, re.findall(r'\d+', yardLine)))
             convertedYardLine = 100-numList[0]
         else:
@@ -170,4 +171,33 @@ def convertTime(channel, gameInfo, timeOff):
             updateTime(channel, finalTime)
         
     return finalTime
+
+"""
+Get the clock runoff
+
+"""
+def getClockRunoff(message, offensivePlaybook, clockRunoffType):
+    clockRunoff = 0
+    gameInfo = getGameInfo(message.channel)
+    clockStopped = gameInfo["clock stopped"]
+    # Add clock runoff
+    if clockStopped == "NO":
+        if clockRunoffType == "normal":
+            if offensivePlaybook == "flexbone":
+                clockRunoff = 20
+            if offensivePlaybook == "west coast":
+                clockRunoff = 17
+            if offensivePlaybook == "pro":
+                clockRunoff = 15
+            if offensivePlaybook == "spread":
+                clockRunoff = 13
+            if offensivePlaybook == "air raid":
+                clockRunoff = 10
+        elif clockRunoffType == "chew":
+            clockRunoff = 30
+        elif clockRunoffType == "hurry":
+            clockRunoff = 7
+        return clockRunoff
+    else:
+        return 0
         
