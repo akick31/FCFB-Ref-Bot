@@ -187,6 +187,7 @@ async def handleStartCommand(client, message, category):
         
         await channel.send("Welcome to this week's FCFB matchup between " + homeTeam + " and " + awayTeam + "! If you ever see any typos or errors with the bot, please ping Dick\n\n"
                            + homeDiscordUser.mention + ", you're home, " + awayDiscordUser.mention + ", you're away. Call **heads** or **tails** in the air")
+        await message.channel.send(homeTeam + " vs " + awayTeam + " was successfully started")
         print(channel.name + " was successfully started")
     except:
         await message.channel.send("There was an issue starting the game, please ensure you used the right command by using '$help' and then contact Dick")

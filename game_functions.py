@@ -1673,7 +1673,7 @@ async def fumbleReturnKickoff(client, message, gameInfo, result, playType, diffe
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
     await messageUser(client, returnUser, gameInfo, time) 
-    updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF TD", "MUFFED KICKOFF TD", result[1])
+    await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF TD", "MUFFED KICKOFF TD", result[1])
     updatePlayType(message.channel, "TOUCHDOWN")
 
 
@@ -1707,7 +1707,7 @@ async def fumbleKickoff(client, message, gameInfo, result, playType, difference,
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
-    updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF", "MUFFED KICKOFF", result[1])
+    await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF", "MUFFED KICKOFF", result[1])
     await messageUser(client, returnUser, gameInfo, time)
     updatePlayType(message.channel, "NORMAL")
                 
@@ -1743,7 +1743,7 @@ async def normalKickoff(client, message, gameInfo, result, playType, difference,
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
-        updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN", "RETURN TO THE " + str(gameInfo["yard line"]).upper(), result[1])
+        await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN", "RETURN TO THE " + str(gameInfo["yard line"]).upper(), result[1])
         updatePlayType(message.channel, "NORMAL")
     else: 
         if returnTeam == gameInfo["home name"]:
@@ -1762,7 +1762,7 @@ async def normalKickoff(client, message, gameInfo, result, playType, difference,
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
-        updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN TD", "KICKOFF RETURN TD", result[1])
+        await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN TD", "KICKOFF RETURN TD", result[1])
         updatePlayType(message.channel, "TOUCHDOWN")
     await messageUser(client, kickingUser, gameInfo, time)      
                 
