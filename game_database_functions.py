@@ -7,12 +7,17 @@ finishedGames = openpyxlGameWorkbook.worksheets[1]
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Dec 26 16:52:28 2020
+Functions that modify the database or retrieve from the game database
 
 @author: apkick
 """
 
 def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
+    """
+    Add the game to the database
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == None or cell.value == "":
@@ -60,9 +65,15 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 37).value = 0 # defensive number
     ongoingGames.cell(row = rowNum, column = 38).value = "PLAYING" # game status
     ongoingGames.cell(row = rowNum, column = 39).value = "YES" # clock stopped
+    ongoingGames.cell(row = rowNum, column = 40).value = "NONE" # clock stopped
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def getGameInfoDM(user):
+    """
+    Get the game info from the database based on the user's discord name
+    
+    """
+    
     rowNum = 0
     found = 0
     for cell in ongoingGames['D']:
@@ -119,11 +130,17 @@ def getGameInfoDM(user):
                "offensive number": ongoingGames.cell(row = rowNum, column = 36).value,
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
                "game status": ongoingGames.cell(row = rowNum, column = 38).value,
-               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value}
+               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
+               "gist link": ongoingGames.cell(row = rowNum, column = 40).value}
     
     return gameInfo
 
 def getGameInfo(channel):
+    """
+    Get the game info from the database
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -171,11 +188,17 @@ def getGameInfo(channel):
                "offensive number": ongoingGames.cell(row = rowNum, column = 36).value,
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
                "game status": ongoingGames.cell(row = rowNum, column = 38).value,
-               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value}
+               "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
+               "gist link": ongoingGames.cell(row = rowNum, column = 40).value}
     
     return gameInfo
 
 def updateHomeScore(channel, score):
+    """
+    Update the home score
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -189,6 +212,11 @@ def updateHomeScore(channel, score):
     openpyxlGameWorkbook.save('game_database.xlsx')
 
 def updateHomeTimeouts(channel, timeouts):
+    """
+    Update the home timeouts
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -202,6 +230,11 @@ def updateHomeTimeouts(channel, timeouts):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateAwayScore(channel, score):
+    """
+    Update the away score
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -215,6 +248,11 @@ def updateAwayScore(channel, score):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateAwayTimeouts(channel, timeouts):
+    """
+    Update the away timeouts
+    
+    """
+
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -228,6 +266,11 @@ def updateAwayTimeouts(channel, timeouts):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateCoinTossWinner(channel, winner):
+    """
+    Update the coin toss winner
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -241,6 +284,11 @@ def updateCoinTossWinner(channel, winner):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def updateCoinTossDecision(channel, decision):
+    """
+    Update the coin toss decision
+    
+    """
+
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -253,11 +301,13 @@ def updateCoinTossDecision(channel, decision):
     ongoingGames.cell(row = rowNum, column = 27).value = decision # coin toss decision
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the quarter
 
-"""
 def updateQuarter(channel, quarter):
+    """
+    Update the quarter
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -270,11 +320,13 @@ def updateQuarter(channel, quarter):
     ongoingGames.cell(row = rowNum, column = 28).value = quarter # coin toss decision
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the time
 
-"""
 def updateTime(channel, time):
+    """
+    Update the time
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -287,11 +339,13 @@ def updateTime(channel, time):
     ongoingGames.cell(row = rowNum, column = 29).value = time # coin toss decision
     openpyxlGameWorkbook.save('game_database.xlsx')
   
-"""
-Update the normal kickoff location
 
-"""
 def updateNormalKickoffBallLocation(channel, homeTeam, awayTeam, result, possession):
+    """
+    Update the normal kickoff location
+    
+    """
+
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -302,16 +356,16 @@ def updateNormalKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     rowNum = rowNum + 1
     yardLine = ""
     
-    if possession == homeTeam and result != "50" and result != "Returned TD":
+    if possession == homeTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
         yardLine = homeTeam + " " + result
-    elif possession == awayTeam and result != "50" and result != "Returned TD":
+    elif possession == awayTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
         yardLine = awayTeam + " " + result
     elif result == "50":
         yardLine = result
     elif possession == homeTeam and result == "Returned TD":
-        yardLine = awayTeam + " 3"
-    elif possession == awayTeam and result == "Returned TD":
         yardLine = homeTeam + " 3"
+    elif possession == awayTeam and result == "Returned TD":
+        yardLine = awayTeam + " 3"
     elif possession == homeTeam and result == "Fumble":
         yardLine = awayTeam + "20"
     elif possession == awayTeam and result == "Fumble":
@@ -324,11 +378,13 @@ def updateNormalKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     ongoingGames.cell(row = rowNum, column = 30).value = yardLine # yard line
     openpyxlGameWorkbook.save('game_database.xlsx')
 
-"""
-Update the squib kickoff ball location
 
-"""
 def updateSquibKickoffBallLocation(channel, homeTeam, awayTeam, result, possession):
+    """
+    Update the squib kickoff ball location
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -339,16 +395,16 @@ def updateSquibKickoffBallLocation(channel, homeTeam, awayTeam, result, possessi
     rowNum = rowNum + 1
     yardLine = ""
     
-    if possession == homeTeam and result != "50" and result != "Returned TD":
+    if possession == homeTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
         yardLine = homeTeam + " " + result
-    elif possession == awayTeam and result != "50" and result != "Returned TD":
+    elif possession == awayTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
         yardLine = awayTeam + " " + result
     elif result == "50":
         yardLine = result
     elif possession == homeTeam and result == "Returned TD":
-        yardLine = awayTeam + " 3"
-    elif possession == awayTeam and result == "Returned TD":
         yardLine = homeTeam + " 3"
+    elif possession == awayTeam and result == "Returned TD":
+        yardLine = awayTeam + " 3"
     elif possession == homeTeam and result == "Fumble":
         yardLine = awayTeam + "30"
     elif possession == awayTeam and result == "Fumble":
@@ -361,11 +417,13 @@ def updateSquibKickoffBallLocation(channel, homeTeam, awayTeam, result, possessi
     ongoingGames.cell(row = rowNum, column = 30).value = yardLine # yard line
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the onside kickoff ball location
 
-"""
 def updateOnsideKickoffBallLocation(channel, homeTeam, awayTeam, result, possession):
+    """
+    Update the onside kickoff ball location
+    
+    """
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -389,11 +447,11 @@ def updateOnsideKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     openpyxlGameWorkbook.save('game_database.xlsx')
 
     
-"""
-Update the ball location
-
-"""
 def updateBallLocation(channel, yardLine):
+    """
+    Update the ball location
+    
+    """
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -407,11 +465,12 @@ def updateBallLocation(channel, yardLine):
     openpyxlGameWorkbook.save('game_database.xlsx')
 
 
-"""
-Update the down
-
-"""    
 def updateDown(channel, down):
+    """
+    Update the down
+    
+    """   
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -424,11 +483,13 @@ def updateDown(channel, down):
     ongoingGames.cell(row = rowNum, column = 31).value = down # down
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the distance
-
-"""    
+   
 def updateDistance(channel, distance):
+    """
+    Update the distance
+    
+    """ 
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -441,12 +502,13 @@ def updateDistance(channel, distance):
     ongoingGames.cell(row = rowNum, column = 32).value = distance # distance
     openpyxlGameWorkbook.save('game_database.xlsx') 
     
-    
-"""
-Update the possession
-
-"""    
+     
 def updatePossession(channel, possessingTeam):
+    """
+    Update the possession
+    
+    """   
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -459,11 +521,13 @@ def updatePossession(channel, possessingTeam):
     ongoingGames.cell(row = rowNum, column = 33).value = possessingTeam # possession
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the team waiting on
-
-"""    
+ 
 def updateWaitingOn(channel):
+    """
+    Update the team waiting on
+    
+    """   
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -484,11 +548,13 @@ def updateWaitingOn(channel):
     ongoingGames.cell(row = rowNum, column = 34).value = waitingOn # waiting on
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the play type
-
-"""    
+    
 def updatePlayType(channel, playType):
+    """
+    Update the play type
+    
+    """  
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -500,12 +566,12 @@ def updatePlayType(channel, playType):
     
     ongoingGames.cell(row = rowNum, column = 35).value = playType # play type
     openpyxlGameWorkbook.save('game_database.xlsx')
-    
-"""
-Update the offensive number
-
-"""    
+      
 def updateOffensiveNumber(channel, number):
+    """
+    Update the offensive number
+    
+    """  
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -518,11 +584,13 @@ def updateOffensiveNumber(channel, number):
     ongoingGames.cell(row = rowNum, column = 36).value = number # offensive number
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the defensive number
-
-"""    
+   
 def updateDefensiveNumber(channel, number):
+    """
+    Update the defensive number
+    
+    """ 
+    
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel):
@@ -535,11 +603,12 @@ def updateDefensiveNumber(channel, number):
     ongoingGames.cell(row = rowNum, column = 37).value = number # defensive number
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the game status flag
-
-"""    
+    
 def updateGameStatus(channel, status):
+    """
+    Update the game status flag
+    
+    """
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -552,11 +621,12 @@ def updateGameStatus(channel, status):
     ongoingGames.cell(row = rowNum, column = 38).value = status # possession
     openpyxlGameWorkbook.save('game_database.xlsx')
     
-"""
-Update the game clock stopped flag
-
-"""    
+   
 def updateClockStopped(channel, status):
+    """
+    Update the game clock stopped flag
+    
+    """ 
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -569,11 +639,12 @@ def updateClockStopped(channel, status):
     ongoingGames.cell(row = rowNum, column = 39).value = status # possession
     openpyxlGameWorkbook.save('game_database.xlsx')
   
-"""
-Copy the game data to a list
 
-"""
-def copyGameData(channel):
+def updateGist(channel, gist):
+    """
+    Update the GitHub gist link
+    
+    """ 
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
@@ -582,23 +653,75 @@ def copyGameData(channel):
             rowNum = rowNum + 1
             
     rowNum = rowNum + 1
-    data = []
     
-    for i in range(0,40):
-        cellValue = ongoingGames.cell(row = rowNum, column = i).value
-        if cellValue == None or cellValue == "" or cellValue == " ":
+    ongoingGames.cell(row = rowNum, column = 40).value = str(gist) # gist
+    openpyxlGameWorkbook.save('game_database.xlsx')
+  
+
+def copyGameData(channel): 
+    """
+    Copy the game data to a list
+    
+    """
+    
+    rowNum = 0
+    noGame = False
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        if cell.value == None or cell.value == "":
+            noGame = True
             break
         else:
-            data[i] = cellValue
-    return data
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    if(noGame == False):
+        data = []
+        
+        for i in range(1,40):
+            cellValue = ongoingGames.cell(row = rowNum, column = i).value
+            if cellValue == None or cellValue == "" or cellValue == " ":
+                break
+            else:
+                data.append(cellValue)
+                
+        return data
+    else:
+        return "NO GAME FOUND"
 
-"""
-Paste the game data in a new location
-
-"""
-def pasteGameData(data):
+def deleteGameData(channel):
+    """
+    Delete the game data from a list
+    
+    """
     rowNum = 0
+    noGame = False
     for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        if cell.value == None or cell.value == "":
+            noGame = True
+            break
+        else:
+            rowNum = rowNum + 1
+    
+    rowNum = rowNum + 1
+    
+    if(noGame == False):
+        ongoingGames.delete_rows(rowNum)
+        openpyxlGameWorkbook.save('game_database.xlsx')
+    
+        
+def pasteGameData(data):
+    """
+    Paste the game data in a new location
+    
+    """
+    
+    rowNum = 0
+    for cell in finishedGames['A']:
         if cell.value == None or cell.value == "":
             break
         else:
@@ -606,5 +729,28 @@ def pasteGameData(data):
             
     rowNum = rowNum + 1
     
-    for i in range(0,len(data)):
-        ongoingGames.cell(row = rowNum, column = i).value = data[i]
+    for i in range(1,len(data)):
+        finishedGames.cell(row = rowNum, column = i).value = data[i-1]
+        
+    openpyxlGameWorkbook.save('game_database.xlsx')
+
+   
+def checkUserFree(user):
+    """
+    Iterate through the ongoing games and verify the user does not have a game going
+    
+    """ 
+
+    for cell in ongoingGames['D']:
+        if cell.value == user:
+            return False
+        elif cell.value == None or cell.value == "":
+            break
+    
+    for cell in ongoingGames['P']:
+        if cell.value == user:
+            return False
+        elif cell.value == None or cell.value == "":
+            break
+            
+    return True

@@ -10,43 +10,47 @@ kickoffPATRanges = rangesWorkbook.sheet_by_index(1)
 puntRanges = rangesWorkbook.sheet_by_index(2)
 fieldgoalRanges = rangesWorkbook.sheet_by_index(3)
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 """
-Created on Thu Jun 18 23:59:04 2020
+Functions that handle getting and updating information in the ranges database
 
 @author: apkick
 """
 
-"""
-Get the matchup's result column
-
-"""
+#########################
+#      NORMAL PLAY      #
+#########################
 def getResult(row):
+    """
+    Get the normal play result from the ranges sheet
+    
+    """
+    
     resultColumn = []
     for i in range(ranges.nrows):
         resultColumn.append(ranges.cell_value(i, 0))
     return resultColumn[row]
 
-"""
-Get the matchup's time column
 
-"""
 def getTime(row):
+    """
+    Get the normal play time from the ranges sheet
+    
+    """
+    
     timeColumn = []
     for i in range(ranges.nrows):
         timeColumn.append(ranges.cell_value(i, 26))
     return timeColumn[row]
 
-#########################
-#      NORMAL PLAY      #
-#########################
 
-"""
-Get the column number to find the result
-
-"""
 def getMatchupColumnNum(offensivePlaybook, defensivePlaybook, playType):
+    """
+    Go through all the possible playbook matchups and return the column that the matchup 
+    is in on the ranges spreadsheet
+    
+    """
+    
     column = 0
     
     if playType == "pass":
@@ -190,11 +194,13 @@ def getMatchupColumnNum(offensivePlaybook, defensivePlaybook, playType):
         
     return column
     
-"""
-Get the matchup's play result and time
 
-"""
 def getPlayResultRow(matchupColumnNum, difference):  
+    """
+    Get the row that the normal play result is on in the ranges sheet
+    
+    """
+    
     matchupColumn = []
     resultsColumn = []
     resultRow = 0
@@ -218,11 +224,13 @@ def getPlayResultRow(matchupColumnNum, difference):
                 
     return resultRow          
   
-"""
-Get the final play result to send to discord
-
-"""            
+           
 def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped):
+    """
+    Get a normal play's result and return it
+    
+    """
+    
     clockRunoff = 0
     
     # Add clock runoff
@@ -293,7 +301,12 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
 #       FIELD GOAL      #
 #########################
 
-def getFGResult(message, difference):  
+def getFGResult(message, difference): 
+    """
+    Get the field goal result from the ranges sheet and return it
+    
+    """
+    
     distanceColumn = []
     madeColumn = []
     missColumn = []
@@ -343,22 +356,24 @@ def getFGResult(message, difference):
 #########################
 #        PUNTS          #
 #########################
-
-"""
-Iterate through the rows and get the result
-
-"""
 def getPuntResult(row):
+    """
+    Get the punt result from the ranges sheet
+    
+    """
+    
     resultColumn = []
     for i in range(puntRanges.nrows):
         resultColumn.append(puntRanges.cell_value(i, 0))
     return resultColumn[row]
 
-"""
-Get the bucket that the field position is in
 
-"""
 def getFieldPositionColumnNum(yardLine):
+    """
+    Get the bucket that the field position is in
+    
+    """
+    
     if yardLine <= 100 and yardLine >= 66:
         return 1
     elif yardLine <= 65 and yardLine >= 61:
@@ -390,11 +405,13 @@ def getFieldPositionColumnNum(yardLine):
     else:
         return -1
 
-"""
-Get the row that the result is in the spreadsheet
 
-"""
 def getPuntResultRow(message, difference): 
+    """
+    Get the row that the punt result is on in the ranges sheet
+    
+    """
+    
     gameInfo = getGameInfo(message.channel)
     yardLine = convertYardLine(gameInfo)
     
@@ -427,13 +444,12 @@ def getPuntResultRow(message, difference):
 #########################
 #        KICKOFFS       #
 #########################
-
+def getNormalKickoffResultRow(difference): 
+    """
+    Get the row that the normal kickoff result is on in the ranges sheet
     
-"""
-Get the matchup's normal kickoff result and time
-
-"""
-def getNormalKickoffResultRow(difference):  
+    """
+    
     differencesColumn = []
     resultsColumn = []
     resultRow = 0
@@ -457,31 +473,37 @@ def getNormalKickoffResultRow(difference):
                 
     return resultRow  
   
-"""
-Get the normal kickoff time 
 
-"""   
 def getNormalKickoffTime(row):
+    """
+    Get the normal kickoff time from the ranges sheet
+    
+    """
+    
     timeColumn = []
     for i in range(kickoffPATRanges.nrows):
-        timeColumn.append(kickoffPATRanges.cell_value(i, 3))
+        timeColumn.append(kickoffPATRanges.cell_value(i, 2))
     return timeColumn[row]
 
-"""
-Get the normal kickoff result
 
-"""
 def getNormalKickoffResult(row):
+    """
+    Get the normal kickoff result from the ranges sheet
+    
+    """
+    
     resultColumn = []
     for i in range(kickoffPATRanges.nrows):
         resultColumn.append(kickoffPATRanges.cell_value(i, 0))
     return resultColumn[row]
 
-"""
-Get the matchup's squib kickoff result and time
 
-"""
-def getSquibKickoffResultRow(difference):  
+def getSquibKickoffResultRow(difference):
+    """
+    Get the row that the squib kickoff result is on in the ranges sheet
+    
+    """
+    
     differencesColumn = []
     resultsColumn = []
     resultRow = 0
@@ -505,31 +527,37 @@ def getSquibKickoffResultRow(difference):
                 
     return resultRow  
   
-"""
-Get the squib kickoff time 
 
-"""   
 def getSquibKickoffTime(row):
+    """
+    Get the squib kickoff time from the ranges sheet
+    
+    """
+    
     timeColumn = []
     for i in range(kickoffPATRanges.nrows):
         timeColumn.append(kickoffPATRanges.cell_value(i, 5))
     return timeColumn[row]
 
-"""
-Get the squib kickoff result
 
-"""
 def getSquibKickoffResult(row):
+    """
+    Get the squib kickoff result from the ranges sheet
+    
+    """
+    
     resultColumn = []
     for i in range(kickoffPATRanges.nrows):
         resultColumn.append(kickoffPATRanges.cell_value(i, 3))
     return resultColumn[row]
 
-"""
-Get the matchup's onside kickoff result and time
 
-"""
 def getOnsideKickoffResultRow(difference):  
+    """
+    Get the row that the onside kickoff result is on in the ranges sheet
+    
+    """
+    
     differencesColumn = []
     resultsColumn = []
     resultRow = 0
@@ -553,31 +581,37 @@ def getOnsideKickoffResultRow(difference):
                 
     return resultRow  
   
-"""
-Get the onside kickoff time 
 
-"""   
 def getOnsideKickoffTime(row):
+    """
+    Get the onside kickoff time from the ranges sheet
+    
+    """
+    
     timeColumn = []
     for i in range(kickoffPATRanges.nrows):
         timeColumn.append(kickoffPATRanges.cell_value(i, 8))
     return timeColumn[row]
 
-"""
-Get the onside kickoff result
 
-"""
 def getOnsideKickoffResult(row):
+    """
+    Get the onside kickoff result from the ranges sheet
+    
+    """
+
     resultColumn = []
     for i in range(kickoffPATRanges.nrows):
         resultColumn.append(kickoffPATRanges.cell_value(i, 6))
     return resultColumn[row]
    
-"""
-Get and return the kickoff result
 
-"""
 def getFinalKickoffResult(playType, difference):
+    """
+    Get and return the kickoff result
+    
+    """
+
     if(playType.lower() == "normal"):
         resultRow = getNormalKickoffResultRow(difference)
         result = getNormalKickoffResult(resultRow)
@@ -594,22 +628,24 @@ def getFinalKickoffResult(playType, difference):
         result = int(result)
     return {0: result, 1: time} 
 
-"""
-Get and return the point after attempt result
 
-"""
 def getFinalPointAfterResult(playType, difference):
+    """
+    Get and return the point after attempt/two point result
+    
+    """
+
     if(playType.lower() == "pat"):
         if difference >= 0 and difference <= 720:
-            return "Good"
+            return {0: "Good", 1: 0}
         elif difference >= 721 and difference <= 747:
-            return "No Good"
+            return {0: "No Good", 1: 0}
         elif difference >= 748 and difference <= 750:
-            return "Defense 2PT"
+            return {0: "Defense 2PT", 1: 0}
     elif(playType.lower() == "two point"):
         if difference >= 0 and difference <= 300:
-            return "Good"
+            return {0: "Good", 1: 0}
         elif difference >= 301 and difference <= 747:
-            return "No Good"
+            return {0: "No Good", 1: 0}
         elif difference >= 748 and difference <= 750:
-            return "Defense 2PT"
+            return {0: "Defense 2PT", 1: 0}

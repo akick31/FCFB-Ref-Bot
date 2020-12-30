@@ -1,7 +1,7 @@
 from discord_functions import loginDiscord
 
 """
-Created on Wed May 13 19:38:06 2020
+Discord ref bot for Fake College Football
 
 @author: apkick
 """

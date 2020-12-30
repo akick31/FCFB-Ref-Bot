@@ -7,16 +7,17 @@ from game_database_functions import getGameInfo
 guildID = 723390838167699508
 
 """
-Created on Wed May 13 19:38:06 2020
+Utility functions for the game that may be usefil
 
 @author: apkick
 """
 
-"""
-Check to see if the string can be an int
-
-"""
 def representsInt(string):
+    """
+    Check to see if the string can be an int
+    
+    """
+
     try: 
         int(string)
         return True
@@ -24,19 +25,21 @@ def representsInt(string):
         return False
     
     
-"""
-Check if a string has a number, useful for determining if play call is valid
-
-"""
 def hasNumbers(inputString):
+    """
+    Check if a string has a number, useful for determining if play call is valid
+    
+    """
+
     return any(char.isdigit() for char in inputString)
 
  
-"""
-Convert field position to 0-100
-
-"""
 def convertYardLine(gameInfo):
+    """
+    Convert field position to 0-100
+    
+    """
+
     yardLine = gameInfo["yard line"] 
     convertedYardLine = 100
     if(gameInfo["possession"] == gameInfo["home name"]):
@@ -56,11 +59,12 @@ def convertYardLine(gameInfo):
     return convertedYardLine
 
 
-"""
-Convert field position from 0-100
-
-"""
 def convertYardLineBack(yardLine, gameInfo):
+    """
+    Convert field position from 0-100
+    
+    """
+
     if(gameInfo["possession"] == gameInfo["home name"]):
         if int(yardLine) > 50:
             return gameInfo["home name"] + " " + str(100-yardLine)
@@ -77,11 +81,12 @@ def convertYardLineBack(yardLine, gameInfo):
             return "50"
     
 
-"""
-Convert down to show on discord
-
-"""
 def convertDown(down):
+    """
+    Convert down to show on discord
+    
+    """
+
     if down == "1":
         down = "1st"
     elif down == "2":
@@ -92,23 +97,32 @@ def convertDown(down):
         down = "4th"
     return down
 
-"""
-Get the user object
 
-"""
 def getDiscordUser(client, user):
+    """
+    Get the user object from Discord
+    
+    """
+
     guild = client.get_guild(guildID)
+    user = user.strip()
     for member in guild.members:
-        if member.name == user.split("#")[0]:
-            return member
+        if("#" in user):
+            if str(member.name.strip()) == str(user.split("#")[0].strip()):
+                return member
+        else:
+            if member.name.strip() == user.strip():
+                return member
+                
     return "COULD NOT FIND"
 
 
-"""
-Message the defending team
-
-"""
 async def messageUser(client, discordUser, gameInfo, time):
+    """
+    Message the defending team
+    
+    """
+
     down = convertDown(str(gameInfo["down"]))
     
     directMessage = ("**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
@@ -118,20 +132,23 @@ async def messageUser(client, discordUser, gameInfo, time):
                      + "Please submit a number between 1-1500, inclusive")
     await discordUser.send(directMessage)
     
-"""
-Send confirmation of the user's defensive number
 
-"""
 async def messageConfirmationUser(client, discordUser, number):
+    """
+    Send confirmation of the user's defensive number
+    
+    """
+
     directMessage = ("I have " + str(number) + " as your number")
     await discordUser.send(directMessage)
     
-    
-"""
-Calculate the difference
-
-"""     
+     
 def calculateDifference(offense, defense):
+    """
+    Calculate the difference in the numbers
+    
+    """    
+
     if representsInt(str(offense)) and representsInt(str(defense)):
         offense = int(offense)
         defense = int(defense)
@@ -143,14 +160,16 @@ def calculateDifference(offense, defense):
     else:
         return -1
  
-"""
-Convert the time and take it off the clock
 
-"""
 def convertTime(channel, gameInfo, timeOff):
+    """
+    Convert the time and take it off the clock in the database
+    
+    """
+
     minutes, seconds = gameInfo["time"].split(':')
     time = int(minutes) * 60 + int(seconds)
-    time = time - timeOff
+    time = int(time) - int(timeOff)
     if time < 0:
         finalTime = "7:00"
         quarter = int(gameInfo["quarter"]) + 1
@@ -172,11 +191,13 @@ def convertTime(channel, gameInfo, timeOff):
         
     return finalTime
 
-"""
-Get the clock runoff
 
-"""
 def getClockRunoff(message, offensivePlaybook, clockRunoffType):
+    """
+    Get the clock runoff based on the offensive playbook and return it
+    
+    """
+
     clockRunoff = 0
     gameInfo = getGameInfo(message.channel)
     clockStopped = gameInfo["clock stopped"]

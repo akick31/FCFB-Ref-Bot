@@ -6,12 +6,20 @@ from user_database_functions import getDefensivePlaybook
 from game_database_functions import addGameToDatabase
 from game_database_functions import copyGameData
 from game_database_functions import pasteGameData
-from ranges_functions import getFinalKickoffResult
+from game_database_functions import deleteGameData
+from game_database_functions import getGameInfo
+from game_database_functions import checkUserFree
+from github_functions import createLogFile
+from github_functions import getLogFile
+from github_functions import getLogFileURL
+from user_database_functions import checkName
+from user_database_functions import checkUser
+from user_database_functions import addUser
+from user_database_functions import deleteTeam
 from game_functions import game
 from game_functions import gameDM
-from util import calculateDifference
-from util import representsInt
 from util import getDiscordUser
+
 
 """
 Handle the Discord side of the bot. Look for messages and post responses
@@ -22,24 +30,42 @@ Handle the Discord side of the bot. Look for messages and post responses
 helpMessage = "There was an issue with your command, please type '$help' and double check you entered the command correctly"
 guildID = 723390838167699508
 token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
+commandMessage = ("===================\nCOMMANDS\n===================\n" 
+                + "$start (only a commissioner may use this)\n"
+                + "$end (only a commissioner may use this)\n" 
+                + "$delete (only a commissioner may use this)\n" 
+                + "$create\n" 
+                + "$dremove (only a commissioner may use this)\n\n"
+                + "===================\nPLAYBOOK FORMATTING\n===================\n"
+                + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
+                + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
+                + "===================\nCOMMAND FORMATTING\n===================\n"
+                + "$start [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "$end [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "$delete [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "$create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
+                + "$remove [TEAM NAME]\n")
 
 
 
-"""
-Check if user is a specific role
-
-"""
 def checkRole(user, roleName):
+    """
+    Check if user is a specific role
+    
+    """
+
     for role in user.roles:
         if role.name == roleName:
             return True
     return False
     
-"""
-Make sure the team info is valid
 
-"""
 async def checkValidInfo(homeTeamInfo, awayTeamInfo, message):
+    """
+    Make sure the team info in the database is valid
+    
+    """
+
     if homeTeamInfo["user"] == "COULD NOT FIND":
         await message.channel.send("There was an issue with your database, I could not find the home user")
         return False
@@ -66,18 +92,18 @@ async def checkValidInfo(homeTeamInfo, awayTeamInfo, message):
         return False
     
     # Check playbook validity
-    if (homeTeamInfo["offensive playbook"].strip() != "Flexbone" and 
-    homeTeamInfo["offensive playbook"].strip()  != "West Coast" and 
-    homeTeamInfo["offensive playbook"].strip()  != "Pro" and
-    homeTeamInfo["offensive playbook"].strip()  != "Spread" and
-    homeTeamInfo["offensive playbook"].strip()  != "Air Raid"):
+    if (homeTeamInfo["offensive playbook"].strip().lower() != "flexbone" and 
+    homeTeamInfo["offensive playbook"].strip().lower()  != "west coast" and 
+    homeTeamInfo["offensive playbook"].strip().lower()  != "pro" and
+    homeTeamInfo["offensive playbook"].strip().lower()  != "spread" and
+    homeTeamInfo["offensive playbook"].strip().lower()  != "air raid"):
         await message.channel.send("There was an issue with your database, the home offensive playbook is invalid")
         return False
-    if (awayTeamInfo["offensive playbook"].strip()  != "Flexbone" and
-    awayTeamInfo["offensive playbook"].strip()  != "West Coast" and 
-    awayTeamInfo["offensive playbook"].strip()  != "Pro" and
-    awayTeamInfo["offensive playbook"].strip()  != "Spread" and
-    awayTeamInfo["offensive playbook"].strip()  != "Air Raid"):
+    if (awayTeamInfo["offensive playbook"].strip().lower()  != "flexbone" and
+    awayTeamInfo["offensive playbook"].strip().lower()  != "west coast" and 
+    awayTeamInfo["offensive playbook"].strip().lower()  != "pro" and
+    awayTeamInfo["offensive playbook"].strip().lower()  != "spread" and
+    awayTeamInfo["offensive playbook"].strip().lower()  != "air raid"):
         await message.channel.send("There was an issue with your database, the away offensive playbook is invalid")
         return False
     
@@ -100,11 +126,12 @@ async def checkValidInfo(homeTeamInfo, awayTeamInfo, message):
     return True
     
     
-"""
-Handle starting the games
-
-"""
 async def handleStartCommand(client, message, category):
+    """
+    Handle starting the games
+    
+    """
+
     if(message.content.startswith('$start')):
         command = message.content.split('$start')[1].strip()
     try:
@@ -115,6 +142,22 @@ async def handleStartCommand(client, message, category):
         homeUser = getUser(homeTeam)
         awayUser = getUser(awayTeam)
         
+        homeDiscordUser = getDiscordUser(client, homeUser)
+        awayDiscordUser = getDiscordUser(client, awayUser)
+        
+        # Verify the users aren't already in a game
+        homeUserFree = checkUserFree(homeUser)
+        awayUserFree = checkUserFree(awayUser)
+        
+        
+        # Home user is already playing
+        if(homeUserFree == False):
+            await message.channel.send(homeDiscordUser.mention + " is already playing in a game! I cannot schedule them for a second game at this time")
+            return
+        elif(awayUserFree == False):
+            await message.channel.send(awayDiscordUser.mention + " is already playing in a game! I cannot schedule them for a second game at this time")
+            return
+                              
         homeNickname = getNickname(homeTeam)
         awayNickname = getNickname(awayTeam)
        
@@ -139,23 +182,28 @@ async def handleStartCommand(client, message, category):
         
         homeDiscordUser = getDiscordUser(client, homeUser)
         awayDiscordUser = getDiscordUser(client, awayUser)
+    
+        await createLogFile(channel, homeTeam, awayTeam)
         
         await channel.send("Welcome to this week's FCFB matchup between " + homeTeam + " and " + awayTeam + "! If you ever see any typos or errors with the bot, please ping Dick\n\n"
                            + homeDiscordUser.mention + ", you're home, " + awayDiscordUser.mention + ", you're away. Call **heads** or **tails** in the air")
+        print(channel.name + " was successfully started")
     except:
-        await message.channel.send(helpMessage)
+        await message.channel.send("There was an issue starting the game, please ensure you used the right command by using '$help' and then contact Dick")
+        print("There was an issue starting " + message.content.split('$start')[1].strip())
         return
     
-    
-"""
-Handle starting the games
 
-"""    
 async def handleEndCommand(client, message, category):
+    """
+    Handle ending the games
+    
+    """    
+
     if(message.content.startswith('$end')):
         command = message.content.split('$end')[1].strip()
     try:
-        # Get all the information necessary to start a game
+        # Get all the information necessary to end a game
         homeTeam = command.split("vs")[0].strip()
         awayTeam = command.split("vs")[1].strip()
         
@@ -170,55 +218,176 @@ async def handleEndCommand(client, message, category):
         # Ensure you can only delete in the game channel
         if gameChannel == message.channel:
             data = copyGameData(message.channel)
-            pasteGameData(data)
-            gameChannel.delete()
+            if data == "NO GAME FOUND":
+                await message.channel.send("No game data was found and thus I cannot save this game. Deleting the channel.")
+                await gameChannel.delete()
+                print(gameChannel.name + " could not find game data and could not save, but was successfully deleted")
+                return
+            else:
+                pasteGameData(data)
+                deleteGameData(message.channel)
+                await gameChannel.delete()
+                print(gameChannel.name + " was successfully saved and ended")
+                return
+        else:
+            await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
+            return
+    except:
+        await message.channel.send("There was an issue ending the game, please ensure you used the right command by using '$help' and then contact Dick")
+        print("There was an issue ending " + message.channel.name)
+        return
+    
+    
+async def handleDeleteCommand(client, message, category):
+    """
+    Handle deleting the games
+    
+    """
+
+    if(message.content.startswith('$delete')):
+        command = message.content.split('$delete')[1].strip()
+    try:
+        # Get all the information necessary to delete a game
+        homeTeam = command.split("vs")[0].strip()
+        awayTeam = command.split("vs")[1].strip()
+        
+        gameChannel = None
+        for channel in message.guild.channels:
+            name = homeTeam.lower() + " vs " + awayTeam.lower()
+            channelName = name.replace(" ", "-")
+            if channel.name == channelName:
+                gameChannel = channel
+                break        
+        
+        # Ensure you can only delete in the game channel
+        if gameChannel.name == message.channel.name:
+            deleteGameData(message.channel)
+            await gameChannel.delete()
+            print(gameChannel.name + " was successfully deleted")
             return
         else:
             await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
             return
     except:
-        await message.channel.send(helpMessage)
+        await message.channel.send("There was an issue deleting the game, please ensure you used the right command by using '$help' and then contact Dick")
+        print("There was an issue deleting " + message.channel.name)
         return
-        
-        
-"""
-Handle the result command
+    
+    
+async def handleCreateCommand(client, message):
+    """
+    Handle creating teams
+    
+    """
 
-"""
-async def handleResultCommand(message):
-    if(message.content.startswith('$result')):
-        command = message.content.split("$result")[1].strip()
+    if(message.content.startswith('$create')):
+        command = message.content.split('$create')[1].strip()
+        teamInformation = command.split(',')
     try:
-        playType = command.split(",")[0].strip()
-        offensiveNumber = command.split(",")[1].strip()
-        defensiveNumber = command.split(",")[2].strip()
-        difference = calculateDifference(offensiveNumber, defensiveNumber)
+        teamInfo = []
+        if(len(teamInformation) != 7):
+            await message.channel.send("You do not have all of the correct information, please use '$help' to check what is needed")
+            return 
         
-        # Invalid difference
-        if difference == -1:
-            await message.channel.send("There was an issue calculating the difference, please contact Dick")
+        # Handle the team name
+        teamName = teamInformation[0].strip()
+        # Verify the team name isn't already in a game
+        teamUsed = checkName(teamName)
+        if teamUsed == True:
+            await message.channel.send("The team name, " + teamName + ", is already used. Please try another name")
+            return
+        teamInfo.append(teamName)
+        
+        # Handle the team nickname
+        teamNickname = teamInformation[1].strip()
+        teamInfo.append(teamNickname)
+        
+        # Handle the team conference
+        teamConference = teamInformation[2].strip()
+        teamInfo.append(teamConference)
+        
+        # Handle the team coach's discord
+        teamUser = teamInformation[3].strip()
+        # Verify the users aren't already in a game
+        userUsed = checkUser(teamUser)
+        if userUsed == True:
+            await message.channel.send("The user, " + teamUser + ", already has a team, if you want to make changes please contact Dick")
+            return
+        if "#" not in teamUser:
+            await message.channel.send("The user must include the tag. If you click on your profile, you'll see your discord name "
+                                       + " and '#' and a number, please include the '#' and number. For example, #5233")
+            return
+        teamInfo.append(teamUser)
+        
+        # Handle the team coach's name
+        teamCoach = teamInformation[4].strip()
+        teamInfo.append(teamCoach)
+        
+        # Handle the offensive playbook
+        teamOffensivePlaybook = teamInformation[5].strip().lower()
+        if (teamOffensivePlaybook != "flexbone" and teamOffensivePlaybook != "west coast" 
+        and teamOffensivePlaybook != "pro" and teamOffensivePlaybook != "spread"
+        and teamOffensivePlaybook != "air raid"):
+            await message.channel.send("The offensive playbook is not valid, please check what was entered and verify it matches one of the following:\n "
+                                       + "Flexbone, West Coast, Pro, Spread, Air Raid\n")
+            return
+        teamInfo.append(teamOffensivePlaybook)
+        
+        # Handle the defensive playbook
+        teamDefensivePlaybook = teamInformation[6].strip().lower()
+        if (teamDefensivePlaybook != "5-2" and teamDefensivePlaybook != "4-4" 
+        and teamDefensivePlaybook != "4-3" and teamDefensivePlaybook!= "3-4"
+        and teamDefensivePlaybook != "3-3-5"):
+            await message.channel.send("The defensive playbook is not valid, please check what was entered and verify it matches one of the following:\n "
+                                       + "3-4, 4-3, 4-4, 3-3-5, 5-2\n")
+            return
+        teamInfo.append(teamDefensivePlaybook)
+        
+        addUser(teamInfo)
+        await message.channel.send(teamName + " was successfully created")
+        print(teamName + " was successfully created")
+        
+    except:
+        await message.channel.send("There was an issue creating the team, please ensure you used the right command by using '$help' and then contact Dick")
+        print("There was an issue creating the team made by " + message.author.name)
+        return
+    
+    
+async def handleRemoveCommand(client, message):
+    """
+    Handle deleting a team
+    
+    """
+
+    if(message.content.startswith('$remove')):
+        command = message.content.split('$remove')[1].strip()
+    try:
+        teamName = command
+        # Verify the team actually exists
+        teamExists = checkName(teamName)   
+        
+        if teamExists == True:
+            deleteTeam(teamName)
+            await message.channel.send(teamName + " was deleted successfully")
+            print(teamName + " was successfully deleted")
+            return
+        else:
+            await message.channel.send("There was an issue deleting " + teamName + ", verify the team name is correct")
+            print("There was an issue deleting " + teamName)
             return
     except:
-        await message.channel.send(helpMessage)
+        await message.channel.send("There was an issue deleting the team, please ensure you used the right command by using '$help' and then contact Dick")
+        print("There was an issue deleting " + message.content.split('$removeTeam')[1].strip())
         return
-    result = getFinalKickoffResult(playType, difference)
-    if(str(result[0]) == "DID NOT FIND PLAY"):
-        await message.channel.send(helpMessage)
-    else:
-        post = ("-------------------------------------------------------------------------\n" 
-        + "Result for a " + str(playType) + " with a " + str(difference) + " difference\n"
-        + "-------------------------------------------------------------------------\n\n")
-        if(representsInt(result[0]) == True):
-            post = post + str(int(result[0]))
-        else:
-            post = post + str(result[0]) + "\n" + str(int(result[1])) + " seconds off the clock"
-        await message.channel.send(post)
+    
+        
 
-"""
-Get the category
-
-"""
 def getCategory(client, categoryName):
+    """
+    Get the category Discord object and return it based on the name you're looking for
+    
+    """
+
     guild = client.get_guild(guildID)
     for serverCategory in guild.categories:
         if serverCategory.name == categoryName:
@@ -227,11 +396,12 @@ def getCategory(client, categoryName):
     return "COULD NOT FIND"
 
 
-"""
-Login to Discord and run the bot
-
-"""
 def loginDiscord():
+    """
+    Login to Discord and run the bot
+    
+    """
+
     intents = discord.Intents.all()
     client = discord.Client(intents=intents)
 
@@ -242,49 +412,70 @@ def loginDiscord():
         if message.guild is not None:
             if(message.channel.category.name != "Games"):
                 if(message.content == '$help'):
-                    await message.channel.send("===================\nCOMMANDS\n===================\n" 
-                                              + "$result\n"
-                                              + "$start (only an admin may use this)\n"
-                                              + "$end (only an admin may use this)\n" 
-                                              + "$createTeam (only an admin may use this)\n\n"
-                                              + "===================\nPLAYBOOK FORMATTING\n===================\n"
-                                              + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
-                                              + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
-                                              + "===================\nCOMMAND FORMATTING\n===================\n"
-                                              + "$result [PLAY TYPE], [OFFENSIVE NUMBER], [DEFENSIVE NUMBER]\n" 
-                                              + "$start [HOME TEAM] vs [AWAY TEAM]\n" 
-                                              + "$end [HOME TEAM] vs [AWAY TEAM]\n" 
-                                              + "$createTeam [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n")
-                                              
-                elif(message.content.startswith('$result')):
-                    await handleResultCommand(message)
+                    await message.channel.send(commandMessage)
                    
                 elif(message.content.startswith('$start')):
                     if checkRole(message.author, "FCFB Test Admin") == False:
                         await message.channel.send("You do not have permission to use this command")
-                        
-                    category = getCategory(client, "Games")
-                    if category == "COULD NOT FIND":
-                        await message.channel.send(helpMessage)
                     else:
-                        await handleStartCommand(client, message, category)
+                        category = getCategory(client, "Games")
+                        if category == "COULD NOT FIND":
+                            await message.channel.send(helpMessage)
+                        else:
+                            await handleStartCommand(client, message, category)
                         
                 elif(message.content.startswith('$end')):
+                    await message.channel.send("You cannot end a game here, you must be in the specific game channel")
+                
+                elif(message.content.startswith('$delete')):
+                    await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
+                    
+                elif(message.content.startswith('$create')):
+                    await handleCreateCommand(client, message)
+                
+                elif(message.content.startswith('$remove')):
                     if checkRole(message.author, "FCFB Test Admin") == False:
                         await message.channel.send("You do not have permission to use this command")
-                        
-                    category = getCategory(client, "Games")
-                    if category == "COULD NOT FIND":
-                        await message.channel.send(helpMessage)
                     else:
-                        await handleEndCommand(client, message, category)
+                        await handleRemoveCommand(client, message)
                    
                 elif(message.content.startswith('$')):
                     await message.channel.send(helpMessage)
                 
             else:
-                # The message is for a game, handle game logic
-                await game(client, message)
+                gameInfo = getGameInfo(message.channel)
+                
+                if(message.content == '$help'):
+                    await message.channel.send(commandMessage)
+                    
+                elif(message.content.startswith('$end')):
+                    if checkRole(message.author, "FCFB Test Admin") == False:
+                        await message.channel.send("You do not have permission to use this command") 
+                    else:
+                        category = getCategory(client, "Games")
+                        if category == "COULD NOT FIND":
+                            await message.channel.send(helpMessage)
+                        else:
+                            await handleEndCommand(client, message, category)
+                        
+                elif(message.content.startswith('$delete')):
+                    if checkRole(message.author, "FCFB Test Admin") == False:
+                        await message.channel.send("You do not have permission to use this command") 
+                    else:
+                        category = getCategory(client, "Games")
+                        if category == "COULD NOT FIND":
+                            await message.channel.send(helpMessage)
+                        else:
+                            await handleDeleteCommand(client, message, category)
+    
+                # Game is invalid
+                elif gameInfo["home user"] == None or gameInfo["away user"] == None or gameInfo["home user"] == "" or gameInfo["away user"] == "":
+                    if (str(message.author) != "FCFB Ref Bot#3976"):
+                        await message.channel.send("No game appears to be found, but a channel for the game exists, please contact Dick.")
+                else:
+                    await game(client, message)
+                    
+                
                 
                                                    
         # Message is from the DM for a game
