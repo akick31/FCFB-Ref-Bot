@@ -65,7 +65,8 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 37).value = 0 # defensive number
     ongoingGames.cell(row = rowNum, column = 38).value = "PLAYING" # game status
     ongoingGames.cell(row = rowNum, column = 39).value = "YES" # clock stopped
-    ongoingGames.cell(row = rowNum, column = 40).value = "NONE" # clock stopped
+    ongoingGames.cell(row = rowNum, column = 40).value = "NONE" # gist link
+    ongoingGames.cell(row = rowNum, column = 41).value = "NONE" # embedded message
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def getGameInfoDM(user):
@@ -131,7 +132,8 @@ def getGameInfoDM(user):
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
                "game status": ongoingGames.cell(row = rowNum, column = 38).value,
                "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
-               "gist link": ongoingGames.cell(row = rowNum, column = 40).value}
+               "gist link": ongoingGames.cell(row = rowNum, column = 40).value,
+               "embedded message": ongoingGames.cell(row = rowNum, column = 41).value}
     
     return gameInfo
 
@@ -189,7 +191,8 @@ def getGameInfo(channel):
                "defensive number": ongoingGames.cell(row = rowNum, column = 37).value,
                "game status": ongoingGames.cell(row = rowNum, column = 38).value,
                "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
-               "gist link": ongoingGames.cell(row = rowNum, column = 40).value}
+               "gist link": ongoingGames.cell(row = rowNum, column = 40).value,
+               "embedded message": ongoingGames.cell(row = rowNum, column = 41).value}
     
     return gameInfo
 
@@ -656,6 +659,24 @@ def updateGist(channel, gist):
     
     ongoingGames.cell(row = rowNum, column = 40).value = str(gist) # gist
     openpyxlGameWorkbook.save('game_database.xlsx')
+    
+    
+def updateEmbeddedMessage(channel, embedded):
+    """
+    Update the Discord embedded message link
+    
+    """ 
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 41).value = str(embedded) # embedded
+    openpyxlGameWorkbook.save('game_database.xlsx')
   
 
 def copyGameData(channel): 
@@ -680,7 +701,7 @@ def copyGameData(channel):
     if(noGame == False):
         data = []
         
-        for i in range(1,40):
+        for i in range(1,41):
             cellValue = ongoingGames.cell(row = rowNum, column = i).value
             if cellValue == None or cellValue == "" or cellValue == " ":
                 break

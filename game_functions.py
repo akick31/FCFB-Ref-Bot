@@ -494,9 +494,9 @@ async def twoPointResult(client, message, gameInfo, result, playType, offenseTea
         gameInfo = getGameInfo(message.channel)
         down = convertDown(str(gameInfo["down"]))
         if offenseTeam == gameInfo["home name"]:
-            updateHomeScore(message.channel, int(gameInfo["home score"]) + 2)
+            updateHomeScore(message.channel, int(gameInfo["home score"]) + 1)
         elif offenseTeam == gameInfo["away name"]:
-            updateAwayScore(message.channel, int(gameInfo["away score"]) + 2)
+            updateAwayScore(message.channel, int(gameInfo["away score"]) + 1)
             
         gameInfo = getGameInfo(message.channel)
         

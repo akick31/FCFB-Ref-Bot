@@ -9,9 +9,9 @@ from game_database_functions import pasteGameData
 from game_database_functions import deleteGameData
 from game_database_functions import getGameInfo
 from game_database_functions import checkUserFree
-from github_functions import createLogFile
-from github_functions import getLogFile
+from game_database_functions import updateEmbeddedMessage
 from github_functions import getLogFileURL
+from github_functions import createLogFile
 from user_database_functions import checkName
 from user_database_functions import checkUser
 from user_database_functions import addUser
@@ -19,6 +19,7 @@ from user_database_functions import deleteTeam
 from game_functions import game
 from game_functions import gameDM
 from util import getDiscordUser
+from util import convertDown
 
 
 """
@@ -47,6 +48,65 @@ commandMessage = ("===================\nCOMMANDS\n===================\n"
                 + "$remove [TEAM NAME]\n")
 
 
+async def createEmbed(client, message, gameChannel, homeTeam, awayTeam, url):
+    """
+    Create a Discord embed
+
+    """
+    embed = discord.Embed(title=homeTeam + " vs " + awayTeam, description="FCFB Game", url=url, color=0x28db18)
+    embed.add_field(name="Home Team", value=homeTeam, inline=True)
+    embed.add_field(name="Away Team", value=awayTeam, inline=True)
+    embed.add_field(name="Score", value="0-0 Tied", inline=False)
+    embed.add_field(name="Clock", value="7:00 left in Q1", inline=False)
+    embed.add_field(name="Possession", value=":football: N/A", inline=True)
+    embed.add_field(name="Yard Line", value=homeTeam + " 35", inline=True)
+    embed.add_field(name="Down", value="1st and 10", inline=True)
+    
+    guild = client.get_guild(guildID)
+    gameLogChannel = None
+    for channel in guild.channels:
+        if channel.name == "game-logs":
+            gameLogChannel = channel
+            break
+    
+    messagePosted = await gameLogChannel.send(embed=embed)
+    updateEmbeddedMessage(gameChannel, messagePosted.id)
+    
+async def editEmbed(client, message, gameInfo, url):
+    embed = discord.Embed(title=gameInfo["home name"] + " vs " + gameInfo["away name"], description="FCFB Game", url=url, color=0x28db18)
+    embed.add_field(name="Home Team", value=gameInfo["home name"] + " " + gameInfo["home nickname"], inline=True)
+    embed.add_field(name="Away Team", value=gameInfo["away name"] + " " + gameInfo["away nickname"], inline=True)
+    homeScore = gameInfo["home score"]
+    awayScore = gameInfo["away score"]
+    score = ""
+    if int(homeScore) > int(awayScore):
+        score = str(homeScore) + "-" + str(awayScore) + " " + gameInfo["home name"] + " leads"
+    elif int(homeScore) < int(awayScore):
+        score = str(homeScore) + "-" + str(awayScore) + " " + gameInfo["away name"] + " leads"
+    else:
+        score = str(homeScore) + "-" + str(awayScore) + " Tied"
+    embed.add_field(name="Score", value=score, inline=False)
+    embed.add_field(name="Clock", value=gameInfo["time"] + " left in Q" + str(gameInfo["quarter"]), inline=False)
+    embed.add_field(name="Possession", value=":football: " + gameInfo["possession"], inline=True)
+    embed.add_field(name="Yard Line", value=gameInfo["yard line"], inline=True)
+    down = convertDown(str(gameInfo["down"]))
+    embed.add_field(name="Down", value=down + " and " + str(gameInfo["distance"]), inline=True)
+    
+    guild = client.get_guild(guildID)
+    gameLogChannel = None
+    for channel in guild.channels:
+        if channel.name == "game-logs":
+            gameLogChannel = channel
+            break
+        
+    try:
+        oldEmbed = await gameLogChannel.fetch_message(gameInfo["embedded message"])
+        await oldEmbed.edit(embed=embed)
+    except:
+        print("Could not edit game log, likely because the game log for this game doesn't exist anymore")
+        return
+    
+    
 
 def checkRole(user, roleName):
     """
@@ -185,6 +245,11 @@ async def handleStartCommand(client, message, category):
     
         await createLogFile(channel, homeTeam, awayTeam)
         
+        gameInfo = getGameInfo(channel)
+        gistLink = getLogFileURL(gameInfo["gist link"])
+        
+        await createEmbed(client, message, channel, homeTeam, awayTeam, gistLink)
+        
         await channel.send("Welcome to this week's FCFB matchup between " + homeTeam + " and " + awayTeam + "! If you ever see any typos or errors with the bot, please ping Dick\n\n"
                            + homeDiscordUser.mention + ", you're home, " + awayDiscordUser.mention + ", you're away. Call **heads** or **tails** in the air")
         await message.channel.send(homeTeam + " vs " + awayTeam + " was successfully started")
@@ -262,6 +327,18 @@ async def handleDeleteCommand(client, message, category):
         
         # Ensure you can only delete in the game channel
         if gameChannel.name == message.channel.name:
+            gameInfo = getGameInfo(message.channel)
+            
+            guild = client.get_guild(guildID)
+            gameLogChannel = None
+            for channel in guild.channels:
+                if channel.name == "game-logs":
+                    gameLogChannel = channel
+                    break
+            if(gameInfo["embedded message"] != None and gameInfo["embedded message"] != ""):
+                embedMessage = await gameLogChannel.fetch_message(gameInfo["embedded message"])
+                await embedMessage.delete()
+        
             deleteGameData(message.channel)
             await gameChannel.delete()
             print(gameChannel.name + " was successfully deleted")
@@ -475,6 +552,11 @@ def loginDiscord():
                         await message.channel.send("No game appears to be found, but a channel for the game exists, please contact Dick.")
                 else:
                     await game(client, message)
+                    gameInfo = getGameInfo(message.channel)
+                    if(gameInfo["gist link"] != None and gameInfo["gist link"] != ""):
+                        gistLink = getLogFileURL(gameInfo["gist link"])
+                        await editEmbed(client, message, gameInfo, gistLink)
+                            
                     
                 
                 
