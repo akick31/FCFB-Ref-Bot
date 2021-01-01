@@ -68,6 +68,7 @@ def addGameToDatabase(channel, homeTeamInfo, awayTeamInfo):
     ongoingGames.cell(row = rowNum, column = 40).value = "NONE" # gist link
     ongoingGames.cell(row = rowNum, column = 41).value = "NONE" # embedded message
     ongoingGames.cell(row = rowNum, column = 42).value = "YES" # number submitted
+    ongoingGames.cell(row = rowNum, column = 43).value = "NO" # halftime
     openpyxlGameWorkbook.save('game_database.xlsx')
     
 def getGameInfoDM(user):
@@ -135,7 +136,8 @@ def getGameInfoDM(user):
                "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
                "gist link": ongoingGames.cell(row = rowNum, column = 40).value,
                "embedded message": ongoingGames.cell(row = rowNum, column = 41).value,
-               "number submitted": ongoingGames.cell(row = rowNum, column = 42).value}
+               "number submitted": ongoingGames.cell(row = rowNum, column = 42).value,
+               "halftime": ongoingGames.cell(row = rowNum, column = 43).value}
     
     return gameInfo
 
@@ -195,7 +197,8 @@ def getGameInfo(channel):
                "clock stopped": ongoingGames.cell(row = rowNum, column = 39).value,
                "gist link": ongoingGames.cell(row = rowNum, column = 40).value,
                "embedded message": ongoingGames.cell(row = rowNum, column = 41).value,
-               "number submitted": ongoingGames.cell(row = rowNum, column = 42).value}
+               "number submitted": ongoingGames.cell(row = rowNum, column = 42).value,
+               "halftime": ongoingGames.cell(row = rowNum, column = 43).value}
     
     return gameInfo
 
@@ -561,6 +564,33 @@ def updateWaitingOn(channel):
     openpyxlGameWorkbook.save('game_database.xlsx')
     
     
+def updateWaitingOnKickoffDM(channel):
+    """
+    Update the team waiting on for when the kickoff number is DMed
+    
+    """   
+    
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    waitingOn = "NO ONE"
+    
+    gameInfo = getGameInfo(channel)
+    if gameInfo["possession"] == gameInfo["home name"]:
+        waitingOn = gameInfo["home user"]
+    elif gameInfo["possession"] == gameInfo["away name"]:
+        waitingOn = gameInfo["away user"]
+    
+    ongoingGames.cell(row = rowNum, column = 34).value = waitingOn # waiting on
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
+    
 def updatePlayType(channel, playType):
     """
     Update the play type
@@ -705,6 +735,24 @@ def updateNumberSubmitted(channel, status):
     ongoingGames.cell(row = rowNum, column = 42).value = str(status) # status
     openpyxlGameWorkbook.save('game_database.xlsx')
   
+    
+def updateHalftime(channel, status):
+    """
+    Update if the defensive number has been submitted
+    
+    """ 
+    rowNum = 0
+    for cell in ongoingGames['A']:
+        if cell.value == str(channel.id):
+            break
+        else:
+            rowNum = rowNum + 1
+            
+    rowNum = rowNum + 1
+    
+    ongoingGames.cell(row = rowNum, column = 43).value = str(status) # status
+    openpyxlGameWorkbook.save('game_database.xlsx')
+    
 
 def copyGameData(channel): 
     """
@@ -728,7 +776,7 @@ def copyGameData(channel):
     if(noGame == False):
         data = []
         
-        for i in range(1,42):
+        for i in range(1,43):
             cellValue = ongoingGames.cell(row = rowNum, column = i).value
             if cellValue == None or cellValue == "" or cellValue == " ":
                 break

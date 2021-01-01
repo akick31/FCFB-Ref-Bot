@@ -16,6 +16,7 @@ from game_database_functions import updateOnsideKickoffBallLocation
 from game_database_functions import updateBallLocation
 from game_database_functions import updatePlayType
 from game_database_functions import updateWaitingOn
+from game_database_functions import updateWaitingOnKickoffDM
 from game_database_functions import updateClockStopped
 from game_database_functions import updateDown
 from game_database_functions import updateDistance
@@ -26,6 +27,7 @@ from game_database_functions import updateTime
 from game_database_functions import getGameInfo
 from game_database_functions import getGameInfoDM
 from game_database_functions import updateNumberSubmitted
+from game_database_functions import updateHalftime
 from user_database_functions import updateRecord
 from github_functions import getLogFile
 from github_functions import getLogFileURL
@@ -82,6 +84,8 @@ async def game(client, message):
         if result != "INVALID":
             updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
+        else:
+            await message.channel.send("There was an issue with determining the kickoff result")
         
     # Handle a normal play type
     elif (gameInfo["play type"] == "NORMAL" and ((str(message.author) == str(gameInfo["home user"]) and gameInfo["possession"] == gameInfo["home name"] and gameInfo["waiting on"] == gameInfo["home user"]) 
@@ -94,6 +98,8 @@ async def game(client, message):
         if result != "INVALID":
             updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
+        else:
+            await message.channel.send("There was an issue with determining the play result")
      
         # Handle a touchdown play type
     elif (gameInfo["play type"] == "TOUCHDOWN" and ((str(message.author) == str(gameInfo["home user"]) and gameInfo["possession"] == gameInfo["home name"] and gameInfo["waiting on"] == gameInfo["home user"]) 
@@ -104,6 +110,8 @@ async def game(client, message):
         if result != "INVALID":
             updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
+        else:
+            await message.channel.send("There was an issue with determining the PAT result")
         
     
     elif (gameInfo["play type"] == "SAFETY KICKOFF"and ((str(message.author) == str(gameInfo["home user"]) and gameInfo["possession"] == gameInfo["home name"] and gameInfo["waiting on"] == gameInfo["home user"]) 
@@ -114,6 +122,8 @@ async def game(client, message):
         if result != "INVALID":
             updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
+        else:
+            await message.channel.send("There was an issue with determining the safety kickoff result")
         
     elif (gameInfo["play type"] == "OVERTIME"):
         updatePlayType(message.channel, "GAME DONE")
@@ -214,12 +224,12 @@ async def gameDM(client, message):
                     if(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "KICKOFF"):
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **normal**, **onside**, or **squib** and your number")
-                        updatePossession(gameInfo["away name"])
+                        updatePossession(gameChannel, gameInfo["away name"])
                         await messageConfirmationUser(client, homeDiscordUser, number)
                     elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **normal**, **onside**, or **squib** and your number")
-                        updatePossession(gameInfo["home name"])
+                        updatePossession(gameChannel, gameInfo["home name"])
                         await messageConfirmationUser(client, awayDiscordUser, number)
                     elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL"):
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
@@ -256,7 +266,12 @@ async def gameDM(client, message):
                         await messageConfirmationUser(client, homeDiscordUser, number)
                         updatePlayType(gameChannel, "NORMAL")
                         
-                    updateWaitingOn(gameChannel)
+                    
+                    if gameInfo["play type"] == "KICKOFF":
+                        updateWaitingOnKickoffDM(gameChannel)
+                    else:
+                        updateWaitingOn(gameChannel)
+                   
                     updateNumberSubmitted(gameChannel, "YES")
     
 
@@ -304,6 +319,7 @@ async def safetyKickoff(client, message, homeDiscordUser, awayDiscordUser, gameI
             # Invalid difference
             if difference == -1:
                 await message.channel.send("There was an issue calculating the difference, please contact Dick")
+                return "INVALID"
             else:
                 if gameInfo["possession"] == gameInfo["home name"]:
                     offensivePlaybook = gameInfo["home offensive playbook"]
@@ -319,7 +335,7 @@ async def safetyKickoff(client, message, homeDiscordUser, awayDiscordUser, gameI
                 gameInfo = getGameInfo(message.channel)
                 if str(result[0]) != "punt":
                     await puntResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference) 
-            return "VALID"
+                return "VALID"
                     
         
 async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo):
@@ -327,116 +343,296 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
     Handle normal plays in a college football game and determine the outcome (not PATs or kickoffs)
     
     """
-
-    # Handle invalid messages
-    if ("pass" not in message.content.lower() and "run" not in message.content.lower() and "punt" not in message.content.lower() and "field goal" not in message.content.lower() 
-    and "spike" not in message.content.lower() and "kneel" not in message.content.lower()):
-        await message.channel.send("I could not find a play in your message, please try again and submit **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike**")
-        return "INVALID"
-    elif hasNumbers(message.content) == False:
-        await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-        await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    # Valid message, get the play and number
-    else:
-        numList = list(map(int, re.findall(r'\d+', message.content)))
-        number = numList[0]
-        # Ensure number is valid
-        if number < 1 or number > 1500:
-             await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
-             return "INVALID"
+    try:
+        # Handle invalid messages
+        if ("pass" not in message.content.lower() and "run" not in message.content.lower() and "punt" not in message.content.lower() and "field goal" not in message.content.lower() 
+        and "spike" not in message.content.lower() and "kneel" not in message.content.lower()):
+            await message.channel.send("I could not find a play in your message, please try again and submit **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike**")
+            return "INVALID"
+        elif hasNumbers(message.content) == False:
+            await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
+            await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        # Valid message, get the play and number
         else:
-            offensiveNumber = number
-            updateOffensiveNumber(message.channel, offensiveNumber)
-            defensiveNumber = gameInfo["defensive number"]
-            difference = calculateDifference(offensiveNumber, defensiveNumber)
-            playType = ""
-            clockRunoffType = ""
-            timeout = 0
-            
-            # Get the play type
-            if("run" in message.content.lower()):
-                playType = "run"
-            elif("pass" in message.content.lower()):
-                playType = "pass"
-            elif("punt" in message.content.lower()):
-                playType = "punt"
-            elif("field goal" in message.content.lower()):
-                playType = "field goal"
-            elif("kneel" in message.content.lower()):
-                playType = "kneel"
-            elif("spike" in message.content.lower()):
-                playType = "spike"
-            
-            # Get the clock runoff
-            if("chew" in message.content.lower()):
-                clockRunoffType = "chew"
-            elif("hurry" in message.content.lower()):
-                clockRunoffType = "hurry"
-            elif("final play" in message.content.lower()):
-                clockRunoffType = "final play"
+            numList = list(map(int, re.findall(r'\d+', message.content)))
+            number = numList[0]
+            # Ensure number is valid
+            if number < 1 or number > 1500:
+                 await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
+                 return "INVALID"
             else:
-                clockRunoffType = "normal"
+                offensiveNumber = number
+                updateOffensiveNumber(message.channel, offensiveNumber)
+                defensiveNumber = gameInfo["defensive number"]
+                difference = calculateDifference(offensiveNumber, defensiveNumber)
+                playType = ""
+                clockRunoffType = ""
+                timeout = 0
                 
-            # See if there's a timeout
-            if("timeout" in message.content.lower()):
-                if gameInfo["possession"] == gameInfo["home name"] and gameInfo["home timeouts"] > 0 and gameInfo["clock stopped"] == "NO": 
-                    timeout = 1
-                    numTimeouts = gameInfo["home timeouts"]
-                    updateHomeTimeouts(message.channel, numTimeouts - 1)
-                    updateClockStopped(message.channel, "YES")
-                elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["away timeouts"] > 0 and gameInfo["clock stopped"] == "NO": 
-                    timeout = 1
-                    numTimeouts = gameInfo["away timeouts"]
-                    updateAwayTimeouts(message.channel, numTimeouts - 1)
-                    updateClockStopped(message.channel, "YES")
-                else:
-                    await message.channel.send("The offense has called a timeout but it was not used")
+                # Get the play type
+                if("run" in message.content.lower()):
+                    playType = "run"
+                elif("pass" in message.content.lower()):
+                    playType = "pass"
+                elif("punt" in message.content.lower()):
+                    playType = "punt"
+                elif("field goal" in message.content.lower()):
+                    playType = "field goal"
+                elif("kneel" in message.content.lower()):
+                    playType = "kneel"
+                elif("spike" in message.content.lower()):
+                    playType = "spike"
                 
-             
-            # Invalid difference
-            if difference == -1:
-                await message.channel.send("There was an issue calculating the difference, please contact Dick")
-            else:
-                offensivePlaybook = ""
-                defensivePlaybook = ""
-                
-                if gameInfo["possession"] == gameInfo["home name"]:
-                    offensivePlaybook = gameInfo["home offensive playbook"]
-                    defensivePlaybook = gameInfo["away defensive playbook"]
+                # Get the clock runoff
+                if("chew" in message.content.lower()):
+                    clockRunoffType = "chew"
+                elif("hurry" in message.content.lower()):
+                    clockRunoffType = "hurry"
+                elif("final play" in message.content.lower()):
+                    clockRunoffType = "final play"
                 else:
-                    offensivePlaybook = gameInfo["away offensive playbook"]
-                    defensivePlaybook = gameInfo["home defensive playbook"]
+                    clockRunoffType = "normal"
                     
+                # See if there's a timeout
+                if("timeout" in message.content.lower()):
+                    if gameInfo["possession"] == gameInfo["home name"] and gameInfo["home timeouts"] > 0 and gameInfo["clock stopped"] == "NO": 
+                        timeout = 1
+                        numTimeouts = gameInfo["home timeouts"]
+                        updateHomeTimeouts(message.channel, numTimeouts - 1)
+                        updateClockStopped(message.channel, "YES")
+                    elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["away timeouts"] > 0 and gameInfo["clock stopped"] == "NO": 
+                        timeout = 1
+                        numTimeouts = gameInfo["away timeouts"]
+                        updateAwayTimeouts(message.channel, numTimeouts - 1)
+                        updateClockStopped(message.channel, "YES")
+                    else:
+                        await message.channel.send("The offense has called a timeout but it was not used")
                     
-                # Get the result from the play
-                if timeout == 0:
-                    clockStopped = gameInfo["clock stopped"]
+                 
+                # Invalid difference
+                if difference == -1:
+                    await message.channel.send("There was an issue calculating the difference, please contact Dick")
                 else:
-                    clockStopped = "YES"
+                    offensivePlaybook = ""
+                    defensivePlaybook = ""
                     
-                # Handle end of half
-                minutes, seconds = gameInfo["time"].split(':')
-                time = int(minutes) * 60 + int(seconds)
-                clockRunoff = getClockRunoff(message, offensivePlaybook, clockRunoffType)
-                endOfHalf = False
-                if time < clockRunoff and timeout == 0 and (clockStopped == "NO" or gameInfo["clock stopped"] == "NO"):
-                    int(gameInfo["quarter"]) + 1
-                    updateQuarter(message.channel, int(gameInfo["quarter"]) + 1)
-                    updateTime(message.channel, "7:00")
-                    
-                    # End of half
-                    if int(gameInfo["quarter"]) + 1 == 3 or int(gameInfo["quarter"]) + 1 == 5:
-                        endOfHalf = True
-                        await message.channel.send("The half has ended. Did not get the play off in time\n")
+                    if gameInfo["possession"] == gameInfo["home name"]:
+                        offensivePlaybook = gameInfo["home offensive playbook"]
+                        defensivePlaybook = gameInfo["away defensive playbook"]
+                    else:
+                        offensivePlaybook = gameInfo["away offensive playbook"]
+                        defensivePlaybook = gameInfo["home defensive playbook"]
                         
-                if endOfHalf == False:  
-                    result = getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped)
-                   
+                        
+                    # Get the result from the play
+                    if timeout == 0:
+                        clockStopped = gameInfo["clock stopped"]
+                    else:
+                        clockStopped = "YES"
+                        
+                    # Handle end of half
+                    minutes, seconds = gameInfo["time"].split(':')
+                    time = int(minutes) * 60 + int(seconds)
+                    clockRunoff = getClockRunoff(message, offensivePlaybook, clockRunoffType)
+                    endOfHalf = False
+                    if time < clockRunoff and timeout == 0 and (clockStopped == "NO" or gameInfo["clock stopped"] == "NO"):
+                        int(gameInfo["quarter"]) + 1
+                        updateQuarter(message.channel, int(gameInfo["quarter"]) + 1)
+                        updateTime(message.channel, "7:00")
+                        updateHalftime(message.channel, "YES")
+                        
+                        # End of half
+                        if int(gameInfo["quarter"]) + 1 == 3 or int(gameInfo["quarter"]) + 1 == 5:
+                            endOfHalf = True
+                            await message.channel.send("The half has ended. Did not get the play off in time\n")
+                            
+                    if endOfHalf == False:  
+                        result = getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped)
+                       
+                        # Update the time and game information
+                        convertTime(message.channel, gameInfo, result[1])
+                        
+                        offenseTeam = ""
+                        defenseTeam = ""
+                        
+                        if(gameInfo["possession"] == gameInfo["home name"]):
+                            offenseTeam = gameInfo["home name"]
+                            defenseTeam = gameInfo["away name"]
+                        else:
+                            offenseTeam = gameInfo["away name"]
+                            defenseTeam = gameInfo["home name"]
+                        
+                        if(playType == "run"):
+                            await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                        elif(playType == "pass"):
+                            await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                        elif(playType == "punt"):
+                            await puntResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                        elif(playType == "field goal"):
+                            await fieldGoalResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                        elif(playType == "kneel"):
+                            await kneelResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                        elif(playType == "spike"):
+                            await spikeResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                                  
+                    # Check if half or game is over
+                    gameInfo = getGameInfo(message.channel)
+                    if (gameInfo["play type"] != "TOUCHDOWN" and endOfHalf == True or (int(gameInfo["quarter"]) == 3 and str(gameInfo["time"]) == "7:00") or (int(gameInfo["quarter"]) == 5 and str(gameInfo["time"]) == "7:00")):
+                        updateHalftime(message.channel, "YES")
+                        if gameInfo["play type"] == "TOUCHDOWN":
+                            updateHalftime(message.channel, "YES")
+                            
+                        elif int(gameInfo["quarter"]) == 5 and int(gameInfo["home score"]) != int(gameInfo["away score"]):
+                            updatePlayType(message.channel, "GAME DONE")
+                            updateHalftime(message.channel, "NO")
+                            
+                        elif int(gameInfo["quarter"]) == 5 and int(gameInfo["home score"]) == int(gameInfo["away score"]):
+                            updatePlayType(message.channel, "OVERTIME")
+                            updateHalftime(message.channel, "NO")
+                        
+                        # Handle halftime
+                        elif int(gameInfo["quarter"]) == 3 and gameInfo("time") == "7:00": 
+                            updatePlayType(message.channel, "KICKOFF")
+                            updateClockStopped(message.channel, "YES")
+                            
+                            if(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "receive"):
+                                updatePossession(message.channel, gameInfo["home name"]) # home team is kicking off
+                            elif(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "defer"):
+                                updatePossession(message.channel, gameInfo["away name"]) # home team is receiving
+                            elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "receive"):
+                                updatePossession(message.channel, gameInfo["away name"]) # away team is kicking off
+                            elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "defer"):
+                                updatePossession(message.channel, gameInfo["home name"]) # away team is receiving 
+                                
+                            updateHomeTimeouts(message.channel, 3)
+                            updateAwayTimeouts(message.channel, 3)
+                            updateDown(message.channel, 1)
+                            updateDistance(message.channel, 10)
+                            updateHalftime(message.channel, "NO")
+                    
+                    return "VALID"
+    except:
+        return "INVALID"
+                        
+
+async def kickoffReturn(client, message, homeDiscordUser, awayDiscordUser, gameInfo):
+    """
+    Handle how the bot deals with kickoff returns
+    
+    """
+    try:
+        # Handle invalid messages
+        if "normal" not in message.content.lower() and "squib" not in message.content.lower() and "onside" not in message.content.lower():
+            await message.channel.send("I could not find a play in your message, please try again and submit **normal**, **squib**, or **onside**")
+            return "INVALID"
+        elif hasNumbers(message.content) == False:
+            await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
+            await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        # Valid message, get the play and number
+        else:
+            numList = list(map(int, re.findall(r'\d+', message.content)))
+            number = numList[0]
+            # Ensure number is valid
+            if number < 1 or number > 1500:
+                 await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
+                 return "INVALID"
+            else:
+                offensiveNumber = number
+                updateOffensiveNumber(message.channel, offensiveNumber)
+                defensiveNumber = gameInfo["defensive number"]
+                difference = calculateDifference(offensiveNumber, defensiveNumber)
+                playType = ""
+                if("normal" in message.content.lower()):
+                    playType = "normal"
+                elif("onside" in message.content.lower()):
+                    playType = "onside"
+                elif("squib" in message.content.lower()):
+                    playType = "squib"
+    
+                # Invalid difference
+                if difference == -1:
+                    await message.channel.send("There was an issue calculating the difference, please contact Dick")
+                else:
+                    if gameInfo["possession"] == gameInfo["home name"]:
+                        offensivePlaybook = gameInfo["home offensive playbook"]
+                        defensivePlaybook = gameInfo["away defensive playbook"]
+                    else:
+                        offensivePlaybook = gameInfo["away offensive playbook"]
+                        defensivePlaybook = gameInfo["home defensive playbook"]
+                                              
+                    # Get the result from the play
+                    result = getFinalKickoffResult(playType, difference)
                     # Update the time and game information
-                    convertTime(message.channel, gameInfo, result[1])
+                    time = convertTime(message.channel, gameInfo, result[1])
+                    gameInfo = getGameInfo(message.channel)
+                    if str(result[0]) != "Fumble" and str(result[0]) != "Touchdown":
+                        if gameInfo["possession"] == gameInfo["home name"]:
+                            await normalKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), homeDiscordUser)              
+                        if gameInfo["possession"] == gameInfo["away name"]:
+                            await normalKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), awayDiscordUser)              
+                    if str(result[0]) == "Fumble":
+                        if gameInfo["possession"] == gameInfo["home name"]:
+                            await fumbleKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
+                        if gameInfo["possession"] == gameInfo["away name"]:
+                            await fumbleKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
+                    if str(result[0]) == "Touchdown":
+                        if gameInfo["possession"] == gameInfo["home name"]:
+                            await fumbleReturnKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
+                        if gameInfo["possession"] == gameInfo["away name"]:
+                            await fumbleReturnKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
+                    return "VALID"
+    except:
+        return "INVALID"
+                        
+async def pointAfterPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo):
+    """
+    Handle how the bot deals with PATs and two point conversions
+    
+    """
+    try:
+        # Handle invalid messages
+        if ("pat" not in message.content.lower() and "two point" not in message.content.lower()):
+            await message.channel.send("I could not find a play in your message, please try again and submit **two point** or **pat**")
+            return "INVALID"
+        elif hasNumbers(message.content) == False:
+            await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
+            await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
+            return "INVALID"
+        # Valid message, get the play and number
+        else:
+            numList = list(map(int, re.findall(r'\d+', message.content)))
+            number = numList[0]
+            # Ensure number is valid
+            if number < 1 or number > 1500:
+                 await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
+            else:
+                offensiveNumber = number
+                updateOffensiveNumber(message.channel, offensiveNumber)
+                defensiveNumber = gameInfo["defensive number"]
+                difference = calculateDifference(offensiveNumber, defensiveNumber)
+                
+                playType = ""
+                
+                # Get the play type
+                if("pat" in message.content.lower()):
+                    playType = "pat"
+                elif("two point" in message.content.lower()):
+                    playType = "two point"
+                 
+                # Invalid difference
+                if difference == -1:
+                    await message.channel.send("There was an issue calculating the difference, please contact Dick")
+                else:
+                    # Get the result from the play
+                    result = getFinalPointAfterResult(playType, difference)
                     
                     offenseTeam = ""
                     defenseTeam = ""
@@ -448,178 +644,44 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                         offenseTeam = gameInfo["away name"]
                         defenseTeam = gameInfo["home name"]
                     
-                    if(playType == "run"):
-                        await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                    elif(playType == "pass"):
-                        await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                    elif(playType == "punt"):
-                        await puntResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                    elif(playType == "field goal"):
-                        await fieldGoalResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                    elif(playType == "kneel"):
-                        await kneelResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                    elif(playType == "spike"):
-                        await spikeResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                              
-                # Check if half or game is over
-                gameInfo = getGameInfo(message.channel)
-                if endOfHalf == True or (int(gameInfo["quarter"]) == 3 and int(gameInfo["time"]) == "7:00") or (int(gameInfo["quarter"]) == 5 and int(gameInfo["time"]) == "7:00"):
+                    if(playType == "two point"):
+                        await twoPointResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                    elif(playType == "pat"):
+                        await patResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
+                
+                # If it is halftime or end of game, make sure you do the kickoff and adjust accordingly
+                if (gameInfo["halftime"] == "YES"):
                     if int(gameInfo["quarter"]) == 5 and int(gameInfo["home score"]) != int(gameInfo["away score"]):
                         updatePlayType(message.channel, "GAME DONE")
+                        updateHalftime(message.channel, "NO")
                         
                     elif int(gameInfo["quarter"]) == 5 and int(gameInfo["home score"]) == int(gameInfo["away score"]):
                         updatePlayType(message.channel, "OVERTIME")
+                        updateHalftime(message.channel, "NO")
                       
                     # Handle halftime
-                    elif int(gameInfo["quarter"]) == 3:
+                    elif int(gameInfo["quarter"]) == 3 and gameInfo("time") == "7:00":
                         updatePlayType(message.channel, "KICKOFF")
                         updateClockStopped(message.channel, "YES")
                         
-                        if(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == gameInfo["receive"]):
+                        if(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "receive"):
                             updatePossession(message.channel, gameInfo["home name"]) # home team is kicking off
-                        elif(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == gameInfo["defer"]):
+                        elif(gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "defer"):
                             updatePossession(message.channel, gameInfo["away name"]) # home team is receiving
-                        elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == gameInfo["receive"]):
+                        elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "receive"):
                             updatePossession(message.channel, gameInfo["away name"]) # away team is kicking off
-                        elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == gameInfo["defer"]):
+                        elif(gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "defer"):
+                            print("HERE2")
                             updatePossession(message.channel, gameInfo["home name"]) # away team is receiving 
                             
                         updateHomeTimeouts(message.channel, 3)
                         updateAwayTimeouts(message.channel, 3)
                         updateDown(message.channel, 1)
                         updateDistance(message.channel, 10)
+                        updateHalftime(message.channel, "NO")
                 return "VALID"
-                        
-
-async def kickoffReturn(client, message, homeDiscordUser, awayDiscordUser, gameInfo):
-    """
-    Handle how the bot deals with kickoff returns
-    
-    """
-
-    # Handle invalid messages
-    if "normal" not in message.content.lower() and "squib" not in message.content.lower() and "onside" not in message.content.lower():
-        await message.channel.send("I could not find a play in your message, please try again and submit **normal**, **squib**, or **onside**")
+    except:
         return "INVALID"
-    elif hasNumbers(message.content) == False:
-        await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-        await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    # Valid message, get the play and number
-    else:
-        numList = list(map(int, re.findall(r'\d+', message.content)))
-        number = numList[0]
-        # Ensure number is valid
-        if number < 1 or number > 1500:
-             await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
-             return "INVALID"
-        else:
-            offensiveNumber = number
-            updateOffensiveNumber(message.channel, offensiveNumber)
-            defensiveNumber = gameInfo["defensive number"]
-            difference = calculateDifference(offensiveNumber, defensiveNumber)
-            playType = ""
-            if("normal" in message.content.lower()):
-                playType = "normal"
-            elif("onside" in message.content.lower()):
-                playType = "onside"
-            elif("squib" in message.content.lower()):
-                playType = "squib"
-
-            # Invalid difference
-            if difference == -1:
-                await message.channel.send("There was an issue calculating the difference, please contact Dick")
-            else:
-                if gameInfo["possession"] == gameInfo["home name"]:
-                    offensivePlaybook = gameInfo["home offensive playbook"]
-                    defensivePlaybook = gameInfo["away defensive playbook"]
-                else:
-                    offensivePlaybook = gameInfo["away offensive playbook"]
-                    defensivePlaybook = gameInfo["home defensive playbook"]
-                                          
-                # Get the result from the play
-                result = getFinalKickoffResult(playType, difference)
-                # Update the time and game information
-                time = convertTime(message.channel, gameInfo, result[1])
-                gameInfo = getGameInfo(message.channel)
-                if str(result[0]) != "Fumble" and str(result[0]) != "Touchdown":
-                    if gameInfo["possession"] == gameInfo["home name"]:
-                        await normalKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), homeDiscordUser)              
-                    if gameInfo["possession"] == gameInfo["away name"]:
-                        await normalKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), awayDiscordUser)              
-                if str(result[0]) == "Fumble":
-                    if gameInfo["possession"] == gameInfo["home name"]:
-                        await fumbleKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
-                    if gameInfo["possession"] == gameInfo["away name"]:
-                        await fumbleKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
-                if str(result[0]) == "Touchdown":
-                    if gameInfo["possession"] == gameInfo["home name"]:
-                        await fumbleReturnKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
-                    if gameInfo["possession"] == gameInfo["away name"]:
-                        await fumbleReturnKickoff(client, message, gameInfo, result, playType, difference, time, str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
-                return "VALID"
-                        
-async def pointAfterPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo):
-    """
-    Handle how the bot deals with PATs and two point conversions
-    
-    """
-
-    # Handle invalid messages
-    if ("pat" not in message.content.lower() and "two point" not in message.content.lower()):
-        await message.channel.send("I could not find a play in your message, please try again and submit **two point** or **pat**")
-        return "INVALID"
-    elif hasNumbers(message.content) == False:
-        await message.channel.send("I could not find a number in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    elif len(list(map(int, re.findall(r'\d+', message.content)))) > 1:
-        await message.channel.send("I found multiple numbers in your message, please try again and submit a number between 1-1500")
-        return "INVALID"
-    # Valid message, get the play and number
-    else:
-        numList = list(map(int, re.findall(r'\d+', message.content)))
-        number = numList[0]
-        # Ensure number is valid
-        if number < 1 or number > 1500:
-             await message.channel.send("Your number is not valid, please try again and submit a number between 1-1500")
-        else:
-            offensiveNumber = number
-            updateOffensiveNumber(message.channel, offensiveNumber)
-            defensiveNumber = gameInfo["defensive number"]
-            difference = calculateDifference(offensiveNumber, defensiveNumber)
-            
-            playType = ""
-            
-            # Get the play type
-            if("pat" in message.content.lower()):
-                playType = "pat"
-            elif("two point" in message.content.lower()):
-                playType = "two point"
-             
-            # Invalid difference
-            if difference == -1:
-                await message.channel.send("There was an issue calculating the difference, please contact Dick")
-            else:
-                # Get the result from the play
-                result = getFinalPointAfterResult(playType, difference)
-                
-                offenseTeam = ""
-                defenseTeam = ""
-                
-                if(gameInfo["possession"] == gameInfo["home name"]):
-                    offenseTeam = gameInfo["home name"]
-                    defenseTeam = gameInfo["away name"]
-                else:
-                    offenseTeam = gameInfo["away name"]
-                    defenseTeam = gameInfo["home name"]
-                
-                if(playType == "two point"):
-                    await twoPointResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                elif(playType == "pat"):
-                    await patResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
-                
                               
 #########################
 #      POINT AFTER      #
@@ -632,10 +694,10 @@ async def twoPointResult(client, message, gameInfo, result, playType, offenseTea
 
     if(str(gameInfo["possession"]) == str(gameInfo["home name"])):
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
-        updateBallLocation(str(gameInfo["away name"]) + "35")
+        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
     else:
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
-        updateBallLocation(str(gameInfo["home name"]) + "35")
+        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
       
     updateDown(message.channel, 1)
     updateDistance(message.channel, 10)
@@ -709,7 +771,7 @@ async def twoPointResult(client, message, gameInfo, result, playType, offenseTea
         await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
         
-    updatePossession(message.channel, defenseTeam)
+    updatePossession(message.channel, offenseTeam)
         
        
 async def patResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference):   
@@ -720,10 +782,10 @@ async def patResult(client, message, gameInfo, result, playType, offenseTeam, de
     
     if(str(gameInfo["possession"]) == str(gameInfo["home name"])):
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
-        updateBallLocation(str(gameInfo["away name"]) + "35")
+        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
     else:
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
-        updateBallLocation(str(gameInfo["home name"]) + "35")
+        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
        
     updateDown(message.channel, 1)
     updateDistance(message.channel, 10)
@@ -795,7 +857,7 @@ async def patResult(client, message, gameInfo, result, playType, offenseTeam, de
         await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])  
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
-    updatePossession(message.channel, defenseTeam)           
+    updatePossession(message.channel, offenseTeam)           
                     
                     
                     
@@ -862,7 +924,7 @@ async def spikeResult(client, message, gameInfo, result, playType, offenseTeam, 
         distance = int(gameInfo["distance"])
         
         await message.channel.send(offenseTeam + finalResult
-                                   + "**Result:** kspike\n"
+                                   + "**Result:** spike\n"
                                    + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                    + "**Difference:** " + str(difference) + "\n\n" 
@@ -1217,7 +1279,8 @@ async def punt(client, message, gameInfo, result, playType, puntUser, returnUser
     Update the database and post the message for a standard punt return
     
     """  
-    
+    updatePossession(message.channel, returnTeam)
+    gameInfo = getGameInfo(message.channel)
     puntYardage = int(result[0])
     yardLine = convertYardLine(gameInfo) # Line of scrimmage
     updatedYardLine = yardLine - puntYardage
@@ -1267,7 +1330,8 @@ async def puntReturnTouchdown(client, message, gameInfo, result, playType, puntU
     Update the database and post the message for a punt return touchdown
     
     """  
-    
+    updatePossession(message.channel, returnTeam)
+    gameInfo = getGameInfo(message.channel)
     updateBallLocation(message.channel, puntTeam + " 3")
     updatePlayType(message.channel, "TOUCHDOWN")
     if returnTeam == gameInfo["home name"]:
@@ -1302,7 +1366,8 @@ async def puntBlock(client, message, gameInfo, result, playType, puntUser, retur
     Update the database and post the message for a blocked punt return
     
     """  
-    
+    updatePossession(message.channel, returnTeam)
+    gameInfo = getGameInfo(message.channel)
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100 - yardLine
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
@@ -1337,7 +1402,8 @@ async def puntTouchback(client, message, gameInfo, result, playType, puntUser, r
     Update the database and post the message for a touchback punt
     
     """  
-    
+    updatePossession(message.channel, returnTeam)
+    gameInfo = getGameInfo(message.channel)
     updatedYardLine = 80
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
     
@@ -1371,7 +1437,8 @@ async def puntFumble(client, message, gameInfo, result, playType, puntUser, retu
     Update the database and post the message for a muffed punt
     
     """  
-    
+    updatePossession(message.channel, puntTeam)
+    gameInfo = getGameInfo(message.channel)
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = int(yardLine) - 40
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
@@ -1438,6 +1505,8 @@ async def puntTeamTouchdown(client, message, gameInfo, result, playType, puntUse
     
     """  
     
+    updatePossession(message.channel, puntTeam)
+    gameInfo = getGameInfo(message.channel)
     updateBallLocation(message.channel, returnTeam + " 3")
     updatePlayType(message.channel, "TOUCHDOWN")
     if puntTeam == gameInfo["home name"]:
@@ -1594,6 +1663,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
         distance = int(gameInfo["distance"])
         newYardLine = convertYardLineBack(updatedYardLine, gameInfo)
         updateBallLocation(message.channel, newYardLine)
+        turnoverOnDownsFlag = False
         
         distanceToGo = distance - yards
         if distanceToGo <= 0:
@@ -1602,7 +1672,6 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
             updateDistance(message.channel, 10)
         else:
             # Handle turnover on downs
-            turnoverOnDownsFlag = False
             if(down + 1 > 4):
                 finalResult = finalResult + " It won't be good enough for a first down! Turnover on downs\n"
                 updateDown(message.channel, 1)

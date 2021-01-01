@@ -430,7 +430,8 @@ async def handleCreateCommand(client, message):
         teamInfo.append(teamDefensivePlaybook)
         
         addUser(teamInfo)
-        await message.channel.send(teamName + " was successfully created")
+        
+        await message.channel.send(str(teamName) + " was successfully created")
         print(teamName + " was successfully created")
         
     except:
