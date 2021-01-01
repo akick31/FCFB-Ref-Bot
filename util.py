@@ -4,7 +4,7 @@ from game_database_functions import updateQuarter
 from game_database_functions import updateGameStatus
 from game_database_functions import getGameInfo
 
-guildID = 723390838167699508
+guildID = 398332149335326720
 
 """
 Utility functions for the game that may be usefil

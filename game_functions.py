@@ -41,7 +41,7 @@ from util import convertYardLine
 from util import convertYardLineBack
 from util import getClockRunoff
 
-guildID = 723390838167699508
+guildID = 398332149335326720
 
 
 #!/usr/bin/env python3

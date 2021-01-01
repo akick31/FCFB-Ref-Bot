@@ -29,14 +29,14 @@ Handle the Discord side of the bot. Look for messages and post responses
 """
 
 helpMessage = "There was an issue with your command, please type '$help' and double check you entered the command correctly"
-guildID = 723390838167699508
+guildID = 398332149335326720
 token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
                 + "$start\n"
                 + "$end\n" 
-                + "$delete (only a commissioner may use this)\n" 
+                + "$delete\n" 
                 + "$create\n" 
-                + "$remove (only a commissioner may use this)\n\n"
+                + "$remove\n\n"
                 + "===================\nPLAYBOOK FORMATTING\n===================\n"
                 + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
                 + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
@@ -509,10 +509,7 @@ def loginDiscord():
                     await handleCreateCommand(client, message)
                 
                 elif(message.content.startswith('$remove')):
-                    if checkRole(message.author, "FCFB Test Admin") == False:
-                        await message.channel.send("You do not have permission to use this command")
-                    else:
-                        await handleRemoveCommand(client, message)
+                    await handleRemoveCommand(client, message)
                    
                 elif(message.content.startswith('$')):
                     await message.channel.send(helpMessage)
@@ -531,14 +528,11 @@ def loginDiscord():
                         await handleEndCommand(client, message, category)
                         
                 elif(message.content.startswith('$delete')):
-                    if checkRole(message.author, "FCFB Test Admin") == False:
-                        await message.channel.send("You do not have permission to use this command") 
+                    category = getCategory(client, "Games")
+                    if category == "COULD NOT FIND":
+                        await message.channel.send(helpMessage)
                     else:
-                        category = getCategory(client, "Games")
-                        if category == "COULD NOT FIND":
-                            await message.channel.send(helpMessage)
-                        else:
-                            await handleDeleteCommand(client, message, category)
+                        await handleDeleteCommand(client, message, category)
     
                 # Game is invalid
                 elif gameInfo["home user"] == None or gameInfo["away user"] == None or gameInfo["home user"] == "" or gameInfo["away user"] == "":
