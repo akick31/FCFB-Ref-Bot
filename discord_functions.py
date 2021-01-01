@@ -493,14 +493,11 @@ def loginDiscord():
                     await message.channel.send(commandMessage)
                    
                 elif(message.content.startswith('$start')):
-                    if checkRole(message.author, "FCFB Test Admin") == False:
-                        await message.channel.send("You do not have permission to use this command")
+                    category = getCategory(client, "Games")
+                    if category == "COULD NOT FIND":
+                        await message.channel.send(helpMessage)
                     else:
-                        category = getCategory(client, "Games")
-                        if category == "COULD NOT FIND":
-                            await message.channel.send(helpMessage)
-                        else:
-                            await handleStartCommand(client, message, category)
+                        await handleStartCommand(client, message, category)
                         
                 elif(message.content.startswith('$end')):
                     await message.channel.send("You cannot end a game here, you must be in the specific game channel")
