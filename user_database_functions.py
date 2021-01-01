@@ -103,11 +103,13 @@ def updateRecord(team, result):
 
     wins = record.split["-"][0]
     losses = record.split["-"][1]
+    ties = record.split["-"][2]
     if result == "W":
-        record = str(int(wins) + 1) + "-" + losses
+        record = str(int(wins) + 1) + "-" + losses + "-" + ties
     elif result == "L":
-        record = wins + "-" + str(int(losses) + 1)
-    
+        record = wins + "-" + str(int(losses) + 1) + "-" + ties
+    elif result == "T":
+        record = wins + "-" + losses + "-" + str(int(ties) + 1)
     userDB.cell(row = rowNum, column = 8).value = record
 
 
