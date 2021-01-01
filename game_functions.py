@@ -120,10 +120,10 @@ async def game(client, message):
             
         if winner != "TIE":
             await message.channel.send(winner + " wins the game " + gameInfo["home score"] + "-" + gameInfo["away score"] + "!\n\n"
-                                   + "Please use $end whenever you're ready to clear the channel. You must delete this game before you play another.")
+                                   + "Please use &end whenever you're ready to clear the channel. You must delete this game before you play another.")
         else:
             await message.channel.send("The game finishes tied at " + gameInfo["home score"] + "-" + gameInfo["away score"] + ". Overtime is not currently implemented.\n\n"
-                                   + "Please use $end whenever you're ready to clear the channel. You must delete this game before you play another.")
+                                   + "Please use &end whenever you're ready to clear the channel. You must delete this game before you play another.")
             
 
 async def gameDM(client, message):

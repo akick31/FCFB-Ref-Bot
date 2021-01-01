@@ -28,24 +28,24 @@ Handle the Discord side of the bot. Look for messages and post responses
 @author: apkick
 """
 
-helpMessage = "There was an issue with your command, please type '$help' and double check you entered the command correctly"
+helpMessage = "There was an issue with your command, please type '&help' and double check you entered the command correctly"
 guildID = 398332149335326720
 token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
-                + "$start\n"
-                + "$end\n" 
-                + "$delete\n" 
-                + "$create\n" 
-                + "$remove\n\n"
+                + "&start\n"
+                + "&end\n" 
+                + "&delete\n" 
+                + "&create\n" 
+                + "&remove\n\n"
                 + "===================\nPLAYBOOK FORMATTING\n===================\n"
                 + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
                 + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
                 + "===================\nCOMMAND FORMATTING\n===================\n"
-                + "$start [HOME TEAM] vs [AWAY TEAM]\n" 
-                + "$end [HOME TEAM] vs [AWAY TEAM]\n" 
-                + "$delete [HOME TEAM] vs [AWAY TEAM]\n" 
-                + "$create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
-                + "$remove [TEAM NAME]\n")
+                + "&start [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "&end [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "&delete [HOME TEAM] vs [AWAY TEAM]\n" 
+                + "&create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
+                + "&remove [TEAM NAME]\n")
 
 
 async def createEmbed(client, message, gameChannel, homeTeam, awayTeam, url):
@@ -192,8 +192,8 @@ async def handleStartCommand(client, message, category):
     
     """
 
-    if(message.content.startswith('$start')):
-        command = message.content.split('$start')[1].strip()
+    if(message.content.startswith('&start')):
+        command = message.content.split('&start')[1].strip()
     try:
         # Get all the information necessary to start a game
         homeTeam = command.split("vs")[0].strip()
@@ -255,8 +255,8 @@ async def handleStartCommand(client, message, category):
         await message.channel.send(homeTeam + " vs " + awayTeam + " was successfully started")
         print(channel.name + " was successfully started")
     except:
-        await message.channel.send("There was an issue starting the game, please ensure you used the right command by using '$help' and then contact Dick")
-        print("There was an issue starting " + message.content.split('$start')[1].strip())
+        await message.channel.send("There was an issue starting the game, please ensure you used the right command by using '&help' and then contact Dick")
+        print("There was an issue starting " + message.content.split('&start')[1].strip())
         return
     
 
@@ -266,8 +266,8 @@ async def handleEndCommand(client, message, category):
     
     """    
 
-    if(message.content.startswith('$end')):
-        command = message.content.split('$end')[1].strip()
+    if(message.content.startswith('&end')):
+        command = message.content.split('&end')[1].strip()
     try:
         # Get all the information necessary to end a game
         homeTeam = command.split("vs")[0].strip()
@@ -299,7 +299,7 @@ async def handleEndCommand(client, message, category):
             await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
             return
     except:
-        await message.channel.send("There was an issue ending the game, please ensure you used the right command by using '$help' and then contact Dick")
+        await message.channel.send("There was an issue ending the game, please ensure you used the right command by using '&help' and then contact Dick")
         print("There was an issue ending " + message.channel.name)
         return
     
@@ -310,8 +310,8 @@ async def handleDeleteCommand(client, message, category):
     
     """
 
-    if(message.content.startswith('$delete')):
-        command = message.content.split('$delete')[1].strip()
+    if(message.content.startswith('&delete')):
+        command = message.content.split('&delete')[1].strip()
     try:
         # Get all the information necessary to delete a game
         homeTeam = command.split("vs")[0].strip()
@@ -347,7 +347,7 @@ async def handleDeleteCommand(client, message, category):
             await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
             return
     except:
-        await message.channel.send("There was an issue deleting the game, please ensure you used the right command by using '$help' and then contact Dick")
+        await message.channel.send("There was an issue deleting the game, please ensure you used the right command by using '&help' and then contact Dick")
         print("There was an issue deleting " + message.channel.name)
         return
     
@@ -358,13 +358,13 @@ async def handleCreateCommand(client, message):
     
     """
 
-    if(message.content.startswith('$create')):
-        command = message.content.split('$create')[1].strip()
+    if(message.content.startswith('&create')):
+        command = message.content.split('&create')[1].strip()
         teamInformation = command.split(',')
     try:
         teamInfo = []
         if(len(teamInformation) != 7):
-            await message.channel.send("You do not have all of the correct information, please use '$help' to check what is needed")
+            await message.channel.send("You do not have all of the correct information, please use '&help' to check what is needed")
             return 
         
         # Handle the team name
@@ -426,7 +426,7 @@ async def handleCreateCommand(client, message):
         print(teamName + " was successfully created")
         
     except:
-        await message.channel.send("There was an issue creating the team, please ensure you used the right command by using '$help' and then contact Dick")
+        await message.channel.send("There was an issue creating the team, please ensure you used the right command by using '&help' and then contact Dick")
         print("There was an issue creating the team made by " + message.author.name)
         return
     
@@ -437,8 +437,8 @@ async def handleRemoveCommand(client, message):
     
     """
 
-    if(message.content.startswith('$remove')):
-        command = message.content.split('$remove')[1].strip()
+    if(message.content.startswith('&remove')):
+        command = message.content.split('&remove')[1].strip()
     try:
         teamName = command
         # Verify the team actually exists
@@ -454,8 +454,8 @@ async def handleRemoveCommand(client, message):
             print("There was an issue deleting " + teamName)
             return
     except:
-        await message.channel.send("There was an issue deleting the team, please ensure you used the right command by using '$help' and then contact Dick")
-        print("There was an issue deleting " + message.content.split('$removeTeam')[1].strip())
+        await message.channel.send("There was an issue deleting the team, please ensure you used the right command by using '&help' and then contact Dick")
+        print("There was an issue deleting " + message.content.split('&remove')[1].strip())
         return
     
         
@@ -488,47 +488,47 @@ def loginDiscord():
         
         # Message is from the server
         if message.guild is not None:
-            if(message.channel.category.name != "Games"):
-                if(message.content == '$help'):
+            if(message.channel.category.name != "Scrimmages"):
+                if(message.content == '&help'):
                     await message.channel.send(commandMessage)
                    
-                elif(message.content.startswith('$start')):
-                    category = getCategory(client, "Games")
+                elif(message.content.startswith('&start')):
+                    category = getCategory(client, "Scrimmages")
                     if category == "COULD NOT FIND":
                         await message.channel.send(helpMessage)
                     else:
                         await handleStartCommand(client, message, category)
                         
-                elif(message.content.startswith('$end')):
+                elif(message.content.startswith('&end')):
                     await message.channel.send("You cannot end a game here, you must be in the specific game channel")
                 
-                elif(message.content.startswith('$delete')):
+                elif(message.content.startswith('&delete')):
                     await message.channel.send("You cannot delete a game here, you must be in the specific game channel")
                     
-                elif(message.content.startswith('$create')):
+                elif(message.content.startswith('&create')):
                     await handleCreateCommand(client, message)
                 
-                elif(message.content.startswith('$remove')):
+                elif(message.content.startswith('&remove')):
                     await handleRemoveCommand(client, message)
                    
-                elif(message.content.startswith('$')):
+                elif(message.content.startswith('&')):
                     await message.channel.send(helpMessage)
                 
             else:
                 gameInfo = getGameInfo(message.channel)
                 
-                if(message.content == '$help'):
+                if(message.content == '&help'):
                     await message.channel.send(commandMessage)
                     
-                elif(message.content.startswith('$end')):
-                    category = getCategory(client, "Games")
+                elif(message.content.startswith('&end')):
+                    category = getCategory(client, "Scrimmages")
                     if category == "COULD NOT FIND":
                         await message.channel.send(helpMessage)
                     else:
                         await handleEndCommand(client, message, category)
                         
-                elif(message.content.startswith('$delete')):
-                    category = getCategory(client, "Games")
+                elif(message.content.startswith('&delete')):
+                    category = getCategory(client, "Scrimmages")
                     if category == "COULD NOT FIND":
                         await message.channel.send(helpMessage)
                     else:
