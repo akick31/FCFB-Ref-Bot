@@ -451,9 +451,6 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                             
                     if endOfHalf == False:  
                         result = getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, difference, clockRunoffType, clockStopped)
-                       
-                        # Update the time and game information
-                        convertTime(message.channel, gameInfo, result[1])
                         
                         offenseTeam = ""
                         defenseTeam = ""
@@ -1701,7 +1698,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
         if(incompleteFlag == True): 
             updateClockStopped(message.channel, "YES")
             await message.channel.send("The pass is incomplete\n\n"
-                                       + "**Result:** Incomplete pass"
+                                       + "**Result:** Incomplete pass\n"
                                        + "**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n" 
                                        + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n" 
                                        + "**Difference:** " + str(difference) + "\n\n" 
@@ -2036,20 +2033,20 @@ async def coinTossDecision(client, homeDiscordUser, awayDiscordUser, message, ga
         await message.channel.send(message.author.mention + " chooses to receive. Waiting on a kickoff number from them")
         updateCoinTossDecision(message.channel, "receive")
         if (str(message.author) == str(gameInfo["home user"])):
-            updatePossession(message.channel, str(gameInfo["away name"]))
+            updatePossession(message.channel, str(gameInfo["home name"]))
             await messageUser(client, homeDiscordUser, gameInfo, "7:00")
         else: 
-            updatePossession(message.channel, str(gameInfo["home name"]))
+            updatePossession(message.channel, str(gameInfo["away name"]))
             await messageUser(client, awayDiscordUser, gameInfo, "7:00")
     # Handle a defer
     elif "defer" in message.content.lower().strip():
         await message.channel.send(message.author.mention + " chooses to defer to the second half. Waiting on a kickoff number from their opponent")
         updateCoinTossDecision(message.channel, "defer")  
         if (str(message.author) == str(gameInfo["home user"])):
-            updatePossession(message.channel, str(gameInfo["home name"]))
+            updatePossession(message.channel, str(gameInfo["away name"]))
             await messageUser(client, awayDiscordUser, gameInfo, "7:00")
         else:
-            updatePossession(message.channel, str(gameInfo["away name"]))
+            updatePossession(message.channel, str(gameInfo["home name"]))
             await messageUser(client, homeDiscordUser, gameInfo, "7:00")
         
 

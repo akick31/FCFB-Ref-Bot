@@ -366,9 +366,9 @@ def updateNormalKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     yardLine = ""
     
     if possession == homeTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
-        yardLine = homeTeam + " " + result
-    elif possession == awayTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
         yardLine = awayTeam + " " + result
+    elif possession == awayTeam and result != "50" and result != "Returned TD" and result != "Fumble" and result != "Touchdown":
+        yardLine = homeTeam + " " + result
     elif result == "50":
         yardLine = result
     elif possession == homeTeam and result == "Returned TD":
