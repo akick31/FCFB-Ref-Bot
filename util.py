@@ -3,6 +3,7 @@ from game_database_functions import updateTime
 from game_database_functions import updateQuarter
 from game_database_functions import updateGameStatus
 from game_database_functions import getGameInfo
+from game_database_functions import updateClockStopped
 
 guildID = 398332149335326720
 
@@ -67,16 +68,16 @@ def convertYardLineBack(yardLine, gameInfo):
 
     if(gameInfo["possession"] == gameInfo["home name"]):
         if int(yardLine) > 50:
-            return gameInfo["away name"] + " " + str(100-yardLine)
+            return gameInfo["home name"] + " " + str(100-yardLine)
         elif int(yardLine) < 50:
-            return gameInfo["home name"] + " " + str(yardLine)
+            return gameInfo["away name"] + " " + str(yardLine)
         else:
             return "50"
     else:
         if int(yardLine) > 50:
-            return gameInfo["home name"] + " " + str(100-yardLine)
+            return gameInfo["away name"] + " " + str(100-yardLine)
         elif int(yardLine) < 50:
-            return gameInfo["away name"] + " " + str(yardLine)
+            return gameInfo["home name"] + " " + str(yardLine)
         else:
             return "50"
     
@@ -179,6 +180,7 @@ def convertTime(channel, gameInfo, timeOff):
             updateGameStatus(channel, "OVERTIME")
         updateQuarter(channel, quarter)
         updateTime(channel, finalTime)
+        updateClockStopped(channel, "YES")
     else:
         minutes = int(time / 60)
         seconds = int(time % 60)

@@ -597,7 +597,7 @@ def loginDiscord():
         print('Logged in as')
         print(client.user.name)
         print(client.user.id)
-        print("v1.0")
+        print("v1.0.1")
         print('------')
 
     client.run(token)
