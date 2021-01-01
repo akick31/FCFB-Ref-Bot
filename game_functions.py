@@ -25,6 +25,7 @@ from game_database_functions import updateQuarter
 from game_database_functions import updateTime
 from game_database_functions import getGameInfo
 from game_database_functions import getGameInfoDM
+from user_database_functions import updateRecord
 from github_functions import getLogFile
 from github_functions import getLogFileURL
 from github_functions import updateLogFile
@@ -95,6 +96,23 @@ async def game(client, message):
     #elif (gameInfo["play type"] == "OVERTIME"):
         
     #elif (gameInfo["play type"] == "GAME DONE"):
+       
+    gameInfo = getGameInfo(message.channel)
+    if gameInfo["play type"] == "GAME DONE":
+        winner = ""
+        if gameInfo["home score"] > gameInfo["away score"]:
+            updateRecord(gameInfo["home name"], "W")
+            updateRecord(gameInfo["away name"], "L")
+            winner = gameInfo["home name"]
+            
+        elif gameInfo["home score"] < gameInfo["away score"]:
+            updateRecord(gameInfo["home name"], "L")
+            updateRecord(gameInfo["away name"], "W")
+            winner = gameInfo["away name"]
+            
+        await message.channel.send(winner + " wins the game " + gameInfo["home score"] + "-" + gameInfo["away score"] + "!\n\n"
+                                   + "Please use $end whenever you're ready to clear the channel. You must delete this game before you play another.")
+            
 
 
 async def gameDM(client, message):
@@ -280,7 +298,7 @@ async def normalPlay(client, message, homeDiscordUser, awayDiscordUser, gameInfo
                     clockStopped = gameInfo["clock stopped"]
                 else:
                     clockStopped = "YES"
-                
+                    
                 # Handle end of half
                 minutes, seconds = gameInfo["time"].split(':')
                 time = int(minutes) * 60 + int(seconds)
@@ -391,6 +409,13 @@ async def kickoffReturn(client, message, homeDiscordUser, awayDiscordUser, gameI
             if difference == -1:
                 await message.channel.send("There was an issue calculating the difference, please contact Dick")
             else:
+                if gameInfo["possession"] == gameInfo["home name"]:
+                    offensivePlaybook = gameInfo["home offensive playbook"]
+                    defensivePlaybook = gameInfo["away defensive playbook"]
+                else:
+                    offensivePlaybook = gameInfo["away offensive playbook"]
+                    defensivePlaybook = gameInfo["home defensive playbook"]
+                                          
                 # Get the result from the play
                 result = getFinalKickoffResult(playType, difference)
                 # Update the time and game information

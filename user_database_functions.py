@@ -86,6 +86,31 @@ def getRecord(team):
     return "COULD NOT FIND"
 
 
+def updateRecord(team, result):
+    """
+    Update the team's record based on their game result
+    
+    
+    """
+    record = ""
+    rowNum = 1
+    for cell in userDB['A']:
+        if cell.value == team:
+            record = userDB.cell(row = rowNum, column = 8).value
+        else:
+            rowNum = rowNum + 1
+    return "COULD NOT FIND"
+
+    wins = record.split["-"][0]
+    losses = record.split["-"][1]
+    if result == "W":
+        record = str(int(wins) + 1) + "-" + losses
+    elif result == "L":
+        record = wins + "-" + str(int(losses) + 1)
+    
+    userDB.cell(row = rowNum, column = 8).value = record
+
+
 def deleteTeam(team):
     """
     Iterate through the teams and verify the user does not already exist.

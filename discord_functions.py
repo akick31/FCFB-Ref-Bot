@@ -32,11 +32,11 @@ helpMessage = "There was an issue with your command, please type '$help' and dou
 guildID = 723390838167699508
 token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
-                + "$start (only a commissioner may use this)\n"
-                + "$end (only a commissioner may use this)\n" 
+                + "$start\n"
+                + "$end\n" 
                 + "$delete (only a commissioner may use this)\n" 
                 + "$create\n" 
-                + "$dremove (only a commissioner may use this)\n\n"
+                + "$remove (only a commissioner may use this)\n\n"
                 + "===================\nPLAYBOOK FORMATTING\n===================\n"
                 + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
                 + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
@@ -524,14 +524,11 @@ def loginDiscord():
                     await message.channel.send(commandMessage)
                     
                 elif(message.content.startswith('$end')):
-                    if checkRole(message.author, "FCFB Test Admin") == False:
-                        await message.channel.send("You do not have permission to use this command") 
+                    category = getCategory(client, "Games")
+                    if category == "COULD NOT FIND":
+                        await message.channel.send(helpMessage)
                     else:
-                        category = getCategory(client, "Games")
-                        if category == "COULD NOT FIND":
-                            await message.channel.send(helpMessage)
-                        else:
-                            await handleEndCommand(client, message, category)
+                        await handleEndCommand(client, message, category)
                         
                 elif(message.content.startswith('$delete')):
                     if checkRole(message.author, "FCFB Test Admin") == False:
