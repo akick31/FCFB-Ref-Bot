@@ -16,6 +16,7 @@ from user_database_functions import checkName
 from user_database_functions import checkUser
 from user_database_functions import addUser
 from user_database_functions import deleteTeam
+from user_database_functions import getTeamInformation
 from game_functions import game
 from game_functions import gameDM
 from util import getDiscordUser
@@ -32,11 +33,12 @@ helpMessage = "There was an issue with your command, please type '&help' and dou
 guildID = 398332149335326720
 token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
-                + "&start\n"
-                + "&end\n" 
-                + "&delete\n" 
-                + "&create\n" 
-                + "&remove\n\n"
+                + "&start - starts games\n"
+                + "&end - ends games and saves them\n" 
+                + "&delete - deletes games and does not save them\n" 
+                + "&create - creates teams\n" 
+                + "&remove - removes teams\n"
+                + "&view - view user information\n"
                 + "===================\nPLAYBOOK FORMATTING\n===================\n"
                 + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
                 + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
@@ -44,8 +46,9 @@ commandMessage = ("===================\nCOMMANDS\n===================\n"
                 + "&start [HOME TEAM] vs [AWAY TEAM]\n" 
                 + "&end [HOME TEAM] vs [AWAY TEAM]\n" 
                 + "&delete [HOME TEAM] vs [AWAY TEAM]\n" 
-                + "&create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
-                + "&remove [TEAM NAME]\n")
+                + "&create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME (WITH THE # TAG AS WELL)], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
+                + "&remove [TEAM NAME]\n"
+                + "&view [TEAM NAME]\n")
 
 
 async def createEmbed(client, message, gameChannel, homeTeam, awayTeam, url):
@@ -204,7 +207,8 @@ async def handleStartCommand(client, message, category):
         
         homeDiscordUser = getDiscordUser(client, homeUser)
         awayDiscordUser = getDiscordUser(client, awayUser)
-        
+
+
         # Verify the users aren't already in a game
         homeUserFree = checkUserFree(homeUser)
         awayUserFree = checkUserFree(awayUser)
@@ -217,7 +221,7 @@ async def handleStartCommand(client, message, category):
         elif(awayUserFree == False):
             await message.channel.send(awayDiscordUser.mention + " is already playing in a game! I cannot schedule them for a second game at this time")
             return
-                              
+                             
         homeNickname = getNickname(homeTeam)
         awayNickname = getNickname(awayTeam)
        
@@ -232,6 +236,7 @@ async def handleStartCommand(client, message, category):
         
         valid = await checkValidInfo(homeTeamInfo, awayTeamInfo, message)
         if valid == False:
+            await message.channel.send("There was an issue starting your game due to invalid team info")
             return
         
         # Create the game channel
@@ -251,7 +256,7 @@ async def handleStartCommand(client, message, category):
         await createEmbed(client, message, channel, homeTeam, awayTeam, gistLink)
         
         await channel.send("Welcome to this week's FCFB matchup between " + homeTeam + " and " + awayTeam + "! If you ever see any typos or errors with the bot, please ping Dick\n\n"
-                           + homeDiscordUser.mention + ", you're home, " + awayDiscordUser.mention + ", you're away. Call **heads** or **tails** in the air")
+                           + homeDiscordUser.mention + ", you're home, " + awayDiscordUser.mention + ", you're away. " + awayDiscordUser.mention + " please call **heads** or **tails** in the air")
         await message.channel.send(homeTeam + " vs " + awayTeam + " was successfully started")
         print(channel.name + " was successfully started")
     except:
@@ -395,6 +400,9 @@ async def handleCreateCommand(client, message):
             await message.channel.send("The user must include the tag. If you click on your profile, you'll see your discord name "
                                        + " and '#' and a number, please include the '#' and number. For example, #5233")
             return
+        if "@" in teamUser:
+            await message.channel.send("The user cannot include your '@', it should be something like myname#6969, not @myname")
+            return
         teamInfo.append(teamUser)
         
         # Handle the team coach's name
@@ -458,6 +466,33 @@ async def handleRemoveCommand(client, message):
         print("There was an issue deleting " + message.content.split('&remove')[1].strip())
         return
     
+
+async def handleViewCommand(client, message):
+    """
+    Handle deleting a team
+    
+    """
+
+    if(message.content.startswith('&view')):
+        command = message.content.split('&view')[1].strip()
+    try:
+        teamName = command
+        # Verify the team actually exists
+        teamExists = checkName(teamName)   
+        
+        if teamExists == True:
+            teamInfo = getTeamInformation(teamName)
+            await message.channel.send("**" + teamName + " Information:** " + str(teamInfo))
+            print(teamName + " information was successfully gathered")
+            return
+        else:
+            await message.channel.send("There was an issue getting " + teamName + " information, verify the team name is correct")
+            print("There was an issue deleting " + teamName)
+            return
+    except:
+        await message.channel.send("There was an issue getting the team information, please ensure you used the right command by using '&help' and then contact Dick")
+        print("There was an issue getting information for " + message.content.split('&view')[1].strip())
+        return
         
 
 def getCategory(client, categoryName):
@@ -488,7 +523,7 @@ def loginDiscord():
         
         # Message is from the server
         if message.guild is not None:
-            if(message.channel.category.name != "Scrimmages"):
+            if(message.channel.category.name != "Scrimmages" or message.channel.name == "bot-game-chat"):
                 if(message.content == '&help'):
                     await message.channel.send(commandMessage)
                    
@@ -510,6 +545,9 @@ def loginDiscord():
                 
                 elif(message.content.startswith('&remove')):
                     await handleRemoveCommand(client, message)
+                
+                elif(message.content.startswith('&view')):
+                    await handleViewCommand(client, message)
                    
                 elif(message.content.startswith('&')):
                     await message.channel.send(helpMessage)
@@ -536,9 +574,9 @@ def loginDiscord():
     
                 # Game is invalid
                 elif gameInfo["home user"] == None or gameInfo["away user"] == None or gameInfo["home user"] == "" or gameInfo["away user"] == "":
-                    if (str(message.author) != "FCFB Ref Bot#3976"):
+                    if (str(message.author) != "FCFB Ref Bot#3976" and message.channel.name != "bot-game-chat"):
                         await message.channel.send("No game appears to be found, but a channel for the game exists, please contact Dick.")
-                else:
+                elif gameInfo["number submitted"] == "YES":
                     await game(client, message)
                     gameInfo = getGameInfo(message.channel)
                     if(gameInfo["gist link"] != None and gameInfo["gist link"] != ""):

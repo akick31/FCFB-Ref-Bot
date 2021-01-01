@@ -67,16 +67,16 @@ def convertYardLineBack(yardLine, gameInfo):
 
     if(gameInfo["possession"] == gameInfo["home name"]):
         if int(yardLine) > 50:
-            return gameInfo["home name"] + " " + str(100-yardLine)
+            return gameInfo["away name"] + " " + str(100-yardLine)
         elif int(yardLine) < 50:
-            return gameInfo["away name"] + " " + str(yardLine)
+            return gameInfo["home name"] + " " + str(yardLine)
         else:
             return "50"
     else:
         if int(yardLine) > 50:
-            return gameInfo["away name"] + " " + str(100-yardLine)
+            return gameInfo["home name"] + " " + str(100-yardLine)
         elif int(yardLine) < 50:
-            return gameInfo["home name"] + " " + str(yardLine)
+            return gameInfo["away name"] + " " + str(yardLine)
         else:
             return "50"
     

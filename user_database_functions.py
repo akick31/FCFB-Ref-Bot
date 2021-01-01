@@ -85,6 +85,22 @@ def getRecord(team):
             rowNum = rowNum + 1
     return "COULD NOT FIND"
 
+def getTeamInformation(team):
+    """
+    Get the team's entire list of information from the db
+
+    """
+    rowNum = 1
+    for cell in userDB['A']:
+        if cell.value == team:
+            teamInfo = []
+            for i in range(1, 8):
+                teamInfo.append(userDB.cell(row = rowNum, column = i).value)
+            return teamInfo
+        else:
+            rowNum = rowNum + 1
+    return "COULD NOT FIND"
+
 
 def updateRecord(team, result):
     """
