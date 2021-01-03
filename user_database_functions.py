@@ -3,8 +3,6 @@ import openpyxl
 userWorkbook = openpyxl.load_workbook('user_database.xlsx')
 userDB = userWorkbook.worksheets[0]
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Functions that modify the database or retrieve from the user database
 
@@ -105,28 +103,29 @@ def getTeamInformation(team):
 def updateRecord(team, result):
     """
     Update the team's record based on their game result
-    
-    
+
     """
-    record = ""
     rowNum = 1
+    record = None
     for cell in userDB['A']:
         if cell.value.lower() == team.lower():
             record = userDB.cell(row = rowNum, column = 8).value
         else:
             rowNum = rowNum + 1
-    return "COULD NOT FIND"
 
-    wins = record.split["-"][0]
-    losses = record.split["-"][1]
-    ties = record.split["-"][2]
-    if result == "W":
-        record = str(int(wins) + 1) + "-" + losses + "-" + ties
-    elif result == "L":
-        record = wins + "-" + str(int(losses) + 1) + "-" + ties
-    elif result == "T":
-        record = wins + "-" + losses + "-" + str(int(ties) + 1)
-    userDB.cell(row = rowNum, column = 8).value = record
+    if record is not None:
+        wins = record.split["-"][0]
+        losses = record.split["-"][1]
+        ties = record.split["-"][2]
+        if result == "W":
+            record = str(int(wins) + 1) + "-" + losses + "-" + ties
+        elif result == "L":
+            record = wins + "-" + str(int(losses) + 1) + "-" + ties
+        elif result == "T":
+            record = wins + "-" + losses + "-" + str(int(ties) + 1)
+        userDB.cell(row = rowNum, column = 8).value = record
+    else:
+        return "COULD NOT FIND"
 
 
 def deleteTeam(team):
@@ -157,7 +156,7 @@ def addUser(teamInfo):
     # Find the first empty row
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == None or cell.value == "":
+        if cell.value is None or cell.value == "":
             break
         else:
             rowNum = rowNum + 1
@@ -184,7 +183,7 @@ def checkUser(user):
     for cell in userDB['D']:
         if cell.value.lower() == user.lower():
             return True
-        elif cell.value == None or cell.value == "":
+        elif cell.value is None or cell.value == "":
             break
     
     return False
@@ -201,8 +200,7 @@ def checkName(name):
     for cell in userDB['A']:
         if cell.value.lower() == name.lower():
             return True
-        elif cell.value == None or cell.value == "":
+        elif cell.value is None or cell.value == "":
             break
     
     return False
-
