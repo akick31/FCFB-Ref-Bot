@@ -222,45 +222,45 @@ async def gameDM(client, message):
                                                 + "Please submit either **normal**, **onside**, or **squib** and "
                                                 + "your number")
                         updatePossession(gameChannel, gameInfo["away name"])
-                        await messageConfirmationUser(client, awayDiscordUser, number)
+                        await messageConfirmationUser(awayDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **normal**, **onside**, or **squib** and your number")
                         updatePossession(gameChannel, gameInfo["home name"])
-                        await messageConfirmationUser(client, homeDiscordUser, number)
+                        await messageConfirmationUser(homeDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL":
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike** and your number")
-                        await messageConfirmationUser(client, awayDiscordUser, number)
+                        await messageConfirmationUser(awayDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "NORMAL":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike** and your number")
-                        await messageConfirmationUser(client, homeDiscordUser, number)
+                        await messageConfirmationUser(homeDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "TOUCHDOWN":
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **PAT** or **Two Point** and your number")
-                        await messageConfirmationUser(client, awayDiscordUser, number)
+                        await messageConfirmationUser(awayDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "TOUCHDOWN":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **PAT** or **Two Point** and your number")
-                        await messageConfirmationUser(client, homeDiscordUser, number)
+                        await messageConfirmationUser(homeDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "SAFETY KICKOFF":
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit **punt** and your number")
-                        await messageConfirmationUser(client, awayDiscordUser, number)
+                        await messageConfirmationUser(awayDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "SAFETY KICKOFF":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit **punt** and your number")
-                        await messageConfirmationUser(client, homeDiscordUser, number)
+                        await messageConfirmationUser(homeDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "CHANGE OF POSSESSION":
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike** and your number")
-                        await messageConfirmationUser(client, awayDiscordUser, number)
+                        await messageConfirmationUser(awayDiscordUser, number)
                         updatePlayType(gameChannel, "NORMAL")
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "CHANGE OF POSSESSION":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike** and your number")
-                        await messageConfirmationUser(client, homeDiscordUser, number)
+                        await messageConfirmationUser(homeDiscordUser, number)
                         updatePlayType(gameChannel, "NORMAL")
 
 
@@ -702,7 +702,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "No Good":
@@ -720,7 +720,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "Defense 2PT":
@@ -744,7 +744,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     updatePossession(message.channel, offenseTeam)
@@ -789,7 +789,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "No Good":
@@ -807,7 +807,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "Defense 2PT":
@@ -830,7 +830,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     updatePossession(message.channel, offenseTeam)
@@ -882,7 +882,7 @@ async def spikeResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + offenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, offenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(offenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "SPIKE", "TURNOVER", "0", result[1])
 
     # Update the distance and down
@@ -907,7 +907,7 @@ async def spikeResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "SPIKE", "INCOMPLETE", "0", result[1])
 
 
@@ -957,7 +957,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "SAFETY", "-2", result[1])
 
     # Handle turnover on downs
@@ -983,7 +983,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + offenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, offenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(offenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "TURNOVER", "-2", result[1])
 
     # Update the distance and down
@@ -1008,7 +1008,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseDiscordUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseDiscordUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseDiscordUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "KNEEL", "-2", result[1])
 
 
@@ -1072,7 +1072,7 @@ async def fieldGoalMade(client, message, gameInfo, result, defenseUser, kickingT
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
-    await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+    await messageUser(defenseUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "GOOD", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1115,7 +1115,7 @@ async def fieldGoalMiss(client, message, gameInfo, result, kickingUser, kickingT
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
-    await messageUser(client, kickingUser, gameInfo, gameInfo["time"])
+    await messageUser(kickingUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "MISS", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1158,7 +1158,7 @@ async def fieldGoalBlocked(client, message, gameInfo, result, kickingUser, defen
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
-    await messageUser(client, kickingUser, gameInfo, gameInfo["time"])
+    await messageUser(kickingUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "BLOCKED", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1199,7 +1199,7 @@ async def fieldGoalKickSix(client, message, gameInfo, result, kickingUser, kicki
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
-    await messageUser(client, kickingUser, gameInfo, gameInfo["time"])
+    await messageUser(kickingUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "KICK SIX", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1291,7 +1291,7 @@ async def punt(client, message, result, puntUser, returnTeam, difference):
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + puntUser.mention + " for a number.\n\n")
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT", str(puntYardage) + " NET YARD PUNT", result[1])
-    await messageUser(client, puntUser, gameInfo, gameInfo["time"])
+    await messageUser(puntUser, gameInfo)
 
 
 async def puntReturnTouchdown(client, message, result, puntUser, puntTeam, returnTeam, difference):
@@ -1326,7 +1326,7 @@ async def puntReturnTouchdown(client, message, result, puntUser, puntTeam, retur
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + puntUser.mention + " for a number.\n\n")
-    await messageUser(client, puntUser, gameInfo, gameInfo["time"])
+    await messageUser(puntUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT RETURN TD", "PUNT RETURN TD", result[1])
 
 
@@ -1362,7 +1362,7 @@ async def puntBlock(client, message, result, puntUser, returnTeam, difference):
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + puntUser.mention + " for a number.\n\n")
-    await messageUser(client, puntUser, gameInfo, gameInfo["time"])
+    await messageUser(puntUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT BLOCK", "PUNT BLOCK", result[1])
 
 
@@ -1397,7 +1397,7 @@ async def puntTouchback(client, message, result, puntUser, puntTeam, returnTeam,
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + puntUser.mention + " for a number.\n\n")
-    await messageUser(client, puntUser, gameInfo, gameInfo["time"])
+    await messageUser(puntUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT", "TOUCHBACK", result[1])
 
 
@@ -1439,7 +1439,7 @@ async def puntFumble(client, message, result, returnUser, puntTeam, returnTeam, 
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
-        await messageUser(client, returnUser, gameInfo, gameInfo["time"])
+        await messageUser(returnUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFF PUNT TD", "MUFF PUNT TD", result[1])
     # Handle normal muff
     else:
@@ -1464,7 +1464,7 @@ async def puntFumble(client, message, result, returnUser, puntTeam, returnTeam, 
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
-        await messageUser(client, returnUser, gameInfo, gameInfo["time"])
+        await messageUser(returnUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFFED PUNT", "MUFFED PUNT", result[1])
 
 
@@ -1501,7 +1501,7 @@ async def puntTeamTouchdown(client, message, result, returnUser, puntTeam, retur
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
-    await messageUser(client, returnUser, gameInfo, gameInfo["time"])
+    await messageUser(returnUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFF PUNT TD", "MUFF PUNT TD", result[1])
 
 
@@ -1591,7 +1591,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
-        await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TOUCHDOWN", str(yards), result[1])
 
     # Handle safety
@@ -1623,7 +1623,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                    + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
 
-        await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+        await messageUser(defenseUser, gameInfo)
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "SAFETY", str(yards), result[1])
 
     # Handle a standard play
@@ -1681,7 +1681,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                        + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                        + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
             await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "INCOMPLETE", str(yards), result[1])
-            await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+            await messageUser(defenseUser, gameInfo)
         elif turnoverOnDownsFlag:
             updateClockStopped(message.channel, "YES")
             await message.channel.send(offenseTeam + " doesn't get enough on 4th down! Turnover on downs!\n\n"
@@ -1696,7 +1696,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                        + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                        + "\n\nWaiting on " + offenseUser.mention + " for a number.\n\n")
             await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "CHANGE OF POSSESSION", str(yards), result[1])
-            await messageUser(client, offenseUser, gameInfo, gameInfo["time"])
+            await messageUser(offenseUser, gameInfo)
         else:
             if yards >= 0:
                 updateClockStopped(message.channel, "NO")
@@ -1712,7 +1712,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                            + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                            + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
                 await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "GAIN", str(yards), result[1])
-                await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+                await messageUser(defenseUser, gameInfo)
             else:
                 updateClockStopped(message.channel, "NO")
                 await message.channel.send(offenseTeam + " has a " + str(yards) + " yard loss!\n\n"
@@ -1727,7 +1727,7 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                                            + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                            + "\n\nWaiting on " + defenseUser.mention + " for a number.\n\n")
                 await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "LOSS", str(yards), result[1])
-                await messageUser(client, defenseUser, gameInfo, gameInfo["time"])
+                await messageUser(defenseUser, gameInfo)
 
 
 
@@ -1808,7 +1808,7 @@ async def turnoverType(client, message, gameInfo, result, playType, offenseUser,
                                + "\n\nWaiting on " + offenseUser.mention + " for a number.\n\n")
 
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TURNOVER", "TURNOVER", result[1])
-    await messageUser(client, offenseUser, gameInfo, gameInfo["time"])
+    await messageUser(offenseUser, gameInfo)
 
 
 async def defensiveTouchdown(client, message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
@@ -1847,7 +1847,7 @@ async def defensiveTouchdown(client, message, gameInfo, result, playType, offens
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + offenseUser.mention + " for a number.\n\n")
 
-    await messageUser(client, offenseUser, gameInfo, gameInfo["time"])
+    await messageUser(offenseUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TURNOVER TD", "TURNOVER TD", result[1])
 
 
@@ -1891,7 +1891,7 @@ async def fumbleReturnKickoff(client, message, gameInfo, result, playType, diffe
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
-    await messageUser(client, returnUser, gameInfo, time)
+    await messageUser(returnUser, gameInfo)
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF TD", "MUFFED KICKOFF TD", result[1])
     updatePlayType(message.channel, "TOUCHDOWN")
 
@@ -1927,7 +1927,7 @@ async def fumbleKickoff(client, message, gameInfo, result, playType, difference,
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
                                + "\n\nWaiting on " + returnUser.mention + " for a number.\n\n")
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF", "MUFFED KICKOFF", result[1])
-    await messageUser(client, returnUser, gameInfo, time)
+    await messageUser(returnUser, gameInfo)
     updatePlayType(message.channel, "NORMAL")
 
 
@@ -1983,7 +1983,7 @@ async def normalKickoff(client, message, gameInfo, result, playType, difference,
                                    + "\n\nWaiting on " + kickingUser.mention + " for a number.\n\n")
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN TD", "KICKOFF RETURN TD", result[1])
         updatePlayType(message.channel, "TOUCHDOWN")
-    await messageUser(client, kickingUser, gameInfo, time)
+    await messageUser(kickingUser, gameInfo)
 
 
 
@@ -2006,20 +2006,20 @@ async def coinTossDecision(client, homeDiscordUser, awayDiscordUser, message, ga
         updateCoinTossDecision(message.channel, "receive")
         if str(message.author) == str(gameInfo["home user"]):
             updatePossession(message.channel, str(gameInfo["home name"]))
-            await messageUser(client, homeDiscordUser, gameInfo, "7:00")
+            await messageUser(homeDiscordUser, gameInfo)
         else:
             updatePossession(message.channel, str(gameInfo["away name"]))
-            await messageUser(client, awayDiscordUser, gameInfo, "7:00")
+            await messageUser(awayDiscordUser, gameInfo)
     # Handle a defer
     elif "defer" in message.content.lower().strip():
         await message.channel.send(message.author.mention + " chooses to defer to the second half. Waiting on a kickoff number from their opponent")
         updateCoinTossDecision(message.channel, "defer")
         if str(message.author) == str(gameInfo["home user"]):
             updatePossession(message.channel, str(gameInfo["away name"]))
-            await messageUser(client, awayDiscordUser, gameInfo, "7:00")
+            await messageUser(awayDiscordUser, gameInfo)
         else:
             updatePossession(message.channel, str(gameInfo["home name"]))
-            await messageUser(client, homeDiscordUser, gameInfo, "7:00")
+            await messageUser(homeDiscordUser, gameInfo)
 
 
 async def coinToss(homeDiscordUser, awayDiscordUser, message, gameInfo):

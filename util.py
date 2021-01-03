@@ -8,7 +8,7 @@ from game_database_functions import updateClockStopped
 guildID = 398332149335326720
 
 """
-Utility functions for the game that may be usefil
+Utility functions for the game that may be useful
 
 @author: apkick
 """
@@ -41,9 +41,8 @@ def convertYardLine(gameInfo):
     
     """
 
-    yardLine = gameInfo["yard line"] 
-    convertedYardLine = 100
-    if(gameInfo["possession"] == gameInfo["home name"]):
+    yardLine = gameInfo["yard line"]
+    if gameInfo["possession"] == gameInfo["home name"]:
         if gameInfo["home name"] == yardLine.rsplit(' ', 1)[0]:
             numList = list(map(int, re.findall(r'\d+', yardLine)))
             convertedYardLine = 100-numList[0]
@@ -66,7 +65,7 @@ def convertYardLineBack(yardLine, gameInfo):
     
     """
 
-    if(gameInfo["possession"] == gameInfo["home name"]):
+    if gameInfo["possession"] == gameInfo["home name"]:
         if int(yardLine) > 50:
             return gameInfo["home name"] + " " + str(100-yardLine)
         elif int(yardLine) < 50:
@@ -108,7 +107,7 @@ def getDiscordUser(client, user):
     guild = client.get_guild(guildID)
     user = user.strip()
     for member in guild.members:
-        if("#" in user):
+        if "#" in user:
             if str(member.name.strip()) == str(user.split("#")[0].strip()):
                 return member
         else:
@@ -118,7 +117,7 @@ def getDiscordUser(client, user):
     return "COULD NOT FIND"
 
 
-async def messageUser(client, discordUser, gameInfo, time):
+async def messageUser(discordUser, gameInfo):
     """
     Message the defending team
     
@@ -126,7 +125,7 @@ async def messageUser(client, discordUser, gameInfo, time):
 
     down = convertDown(str(gameInfo["down"]))
     
-    directMessage = ("**Q" + str(gameInfo["quarter"])  + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+    directMessage = ("**Q" + str(gameInfo["quarter"]) + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
                                + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + gameInfo["possession"] + "\n\n"
                                + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
                                + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n\n"
@@ -134,7 +133,7 @@ async def messageUser(client, discordUser, gameInfo, time):
     await discordUser.send(directMessage)
     
 
-async def messageConfirmationUser(client, discordUser, number):
+async def messageConfirmationUser(discordUser, number):
     """
     Send confirmation of the user's defensive number
     
@@ -223,4 +222,3 @@ def getClockRunoff(message, offensivePlaybook, clockRunoffType):
         return clockRunoff
     else:
         return 0
-        
