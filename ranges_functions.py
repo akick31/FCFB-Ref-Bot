@@ -50,9 +50,7 @@ def getMatchupColumnNum(offensivePlaybook, defensivePlaybook, playType):
     is in on the ranges spreadsheet
     
     """
-    
-    column = 0
-    
+
     if playType == "pass":
         if offensivePlaybook == "flexbone":
             if defensivePlaybook == "5-2": 
@@ -214,7 +212,7 @@ def getPlayResultRow(matchupColumnNum, difference):
         if "-" in str(matchupColumn[i]):
             minNum = int(matchupColumn[i].split("-")[0])
             maxNum = int(matchupColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(matchupColumn[i]) and "N/A" not in str(matchupColumn[i]):
@@ -253,11 +251,11 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
             
     if playType == "run" or playType == "pass":
         matchupColumnNum = getMatchupColumnNum(offensivePlaybook.lower(), defensivePlaybook.lower(), playType.lower())
-        if(matchupColumnNum != -69):
+        if matchupColumnNum != -69:
             resultRow = getPlayResultRow(matchupColumnNum, difference)
             result = getResult(resultRow)
 
-            if(representsInt(result) == False):
+            if representsInt(result) is False:
                 if str(result) == "Incompletion":
                     updateClockStopped(message.channel, "YES")
 
@@ -269,7 +267,7 @@ def getFinalPlayResult(message, offensivePlaybook, defensivePlaybook, playType, 
     elif playType == "field goal":
         result = getFGResult(message, difference)
         
-        if(str(result) != "Kick 6"):
+        if str(result) != "Kick 6":
             time = 5
         else:
             time = 13
@@ -330,23 +328,22 @@ def getFGResult(message, difference):
         if fieldGoalDistance == distanceColumn[i]:
             minNum = int(madeColumn[i].split("-")[0])
             maxNum = int(madeColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 return "Made"
-                break
             if "-" in str(missColumn[i]):
                 minNum = int(madeColumn[i].split("-")[0])
                 maxNum = int(madeColumn[i].split("-")[1])
-                if difference >= minNum and difference <= maxNum:
+                if minNum <= difference <= maxNum:
                     return "Miss"
             if "-" in str(blockedColumn[i]):
                 minNum = int(blockedColumn[i].split("-")[0])
                 maxNum = int(blockedColumn[i].split("-")[1])
-                if difference >= minNum and difference <= maxNum:
+                if minNum <= difference <= maxNum:
                     return "Blocked"
             if "-" in str(kickSixColumn[i]):
                 minNum = int(kickSixColumn[i].split("-")[0])
                 maxNum = int(kickSixColumn[i].split("-")[1])
-                if difference >= minNum and difference <= maxNum:
+                if minNum <= difference <= maxNum:
                     return "Kick 6"
         else:
             return "Miss"
@@ -374,33 +371,33 @@ def getFieldPositionColumnNum(yardLine):
     
     """
     
-    if yardLine <= 100 and yardLine >= 66:
+    if 100 >= yardLine >= 66:
         return 1
-    elif yardLine <= 65 and yardLine >= 61:
+    elif 65 >= yardLine >= 61:
         return 2
-    elif yardLine <= 60 and yardLine >= 56:
+    elif 60 >= yardLine >= 56:
         return 3
-    elif yardLine <= 55 and yardLine >= 51:
+    elif 55 >= yardLine >= 51:
         return 4
-    elif yardLine <= 50 and yardLine >= 46:
+    elif 50 >= yardLine >= 46:
         return 5
-    elif yardLine <= 45 and yardLine >= 41:
+    elif 45 >= yardLine >= 41:
         return 6
-    elif yardLine <= 40 and yardLine >= 36:
+    elif 40 >= yardLine >= 36:
         return 7
-    elif yardLine <= 35 and yardLine >= 31:
+    elif 35 >= yardLine >= 31:
         return 8
-    elif yardLine <= 30 and yardLine >= 26:
+    elif 30 >= yardLine >= 26:
         return 9
-    elif yardLine <= 25 and yardLine >= 21:
+    elif 25 >= yardLine >= 21:
         return 10
-    elif yardLine <= 20 and yardLine >= 15:
+    elif 20 >= yardLine >= 15:
         return 11
-    elif yardLine <= 15 and yardLine >= 11:
+    elif 15 >= yardLine >= 11:
         return 12
-    elif yardLine <= 10 and yardLine >= 6:
+    elif 10 >= yardLine >= 6:
         return 13
-    elif yardLine <= 5 and yardLine >= 1:
+    elif 5 >= yardLine >= 1:
         return 14
     else:
         return -1
@@ -430,7 +427,7 @@ def getPuntResultRow(message, difference):
         if "-" in str(fieldPositionColumn[i]):
             minNum = int(fieldPositionColumn[i].split("-")[0])
             maxNum = int(fieldPositionColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(fieldPositionColumn[i]) and "N/A" not in str(fieldPositionColumn[i]):
@@ -463,7 +460,7 @@ def getNormalKickoffResultRow(difference):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])
             maxNum = int(differencesColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
@@ -517,7 +514,7 @@ def getSquibKickoffResultRow(difference):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])
             maxNum = int(differencesColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
@@ -571,7 +568,7 @@ def getOnsideKickoffResultRow(difference):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])
             maxNum = int(differencesColumn[i].split("-")[1])
-            if difference >= minNum and difference <= maxNum:
+            if minNum <= difference <= maxNum:
                 resultRow = i
                 break
         elif "-" not in str(differencesColumn[i]) and "N/A" not in str(differencesColumn[i]):
@@ -612,18 +609,20 @@ def getFinalKickoffResult(playType, difference):
     
     """
 
-    if(playType.lower() == "normal"):
+    if playType.lower() == "normal":
         resultRow = getNormalKickoffResultRow(difference)
         result = getNormalKickoffResult(resultRow)
         time = getNormalKickoffTime(resultRow)
-    elif(playType.lower() == "squib"):
+    elif playType.lower() == "squib":
         resultRow = getSquibKickoffResultRow(difference)
         result = getSquibKickoffResult(resultRow)
         time = getSquibKickoffTime(resultRow)
-    elif(playType.lower() == "onside"):
+    elif playType.lower() == "onside":
         resultRow = getOnsideKickoffResultRow(difference)
         result = getOnsideKickoffResult(resultRow)
         time = getOnsideKickoffTime(resultRow)
+    else:
+        return
     if representsInt(result):
         result = int(result)
     return {0: result, 1: time} 
@@ -635,17 +634,17 @@ def getFinalPointAfterResult(playType, difference):
     
     """
 
-    if(playType.lower() == "pat"):
-        if difference >= 0 and difference <= 720:
+    if playType.lower() == "pat":
+        if 0 <= difference <= 720:
             return {0: "Good", 1: 0}
-        elif difference >= 721 and difference <= 747:
+        elif 721 <= difference <= 747:
             return {0: "No Good", 1: 0}
-        elif difference >= 748 and difference <= 750:
+        elif 748 <= difference <= 750:
             return {0: "Defense 2PT", 1: 0}
-    elif(playType.lower() == "two point"):
-        if difference >= 0 and difference <= 300:
+    elif playType.lower() == "two point":
+        if 0 <= difference <= 300:
             return {0: "Good", 1: 0}
-        elif difference >= 301 and difference <= 747:
+        elif 301 <= difference <= 747:
             return {0: "No Good", 1: 0}
-        elif difference >= 748 and difference <= 750:
+        elif 748 <= difference <= 750:
             return {0: "Defense 2PT", 1: 0}
