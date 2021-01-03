@@ -19,7 +19,7 @@ def getNickname(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             return userDB.cell(row = rowNum, column = 2).value
         else:
             rowNum = rowNum + 1
@@ -34,7 +34,7 @@ def getUser(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             return userDB.cell(row = rowNum, column = 4).value
         else:
             rowNum = rowNum + 1
@@ -49,7 +49,7 @@ def getOffensivePlaybook(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             return userDB.cell(row = rowNum, column = 6).value
         else:
             rowNum = rowNum + 1
@@ -64,7 +64,7 @@ def getDefensivePlaybook(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             return userDB.cell(row = rowNum, column = 7).value
         else:
             rowNum = rowNum + 1
@@ -79,7 +79,7 @@ def getRecord(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             return userDB.cell(row = rowNum, column = 8).value
         else:
             rowNum = rowNum + 1
@@ -92,7 +92,7 @@ def getTeamInformation(team):
     """
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             teamInfo = []
             for i in range(1, 8):
                 teamInfo.append(userDB.cell(row = rowNum, column = i).value)
@@ -111,7 +111,7 @@ def updateRecord(team, result):
     record = ""
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             record = userDB.cell(row = rowNum, column = 8).value
         else:
             rowNum = rowNum + 1
@@ -139,7 +139,7 @@ def deleteTeam(team):
     
     rowNum = 1
     for cell in userDB['A']:
-        if cell.value == team:
+        if cell.value.lower() == team.lower():
             userDB.delete_rows(rowNum)
             userWorkbook.save('user_database.xlsx')
             return "SUCCESS"
@@ -182,7 +182,7 @@ def checkUser(user):
     """ 
     
     for cell in userDB['D']:
-        if cell.value == user:
+        if cell.value.lower() == user.lower():
             return True
         elif cell.value == None or cell.value == "":
             break
@@ -199,7 +199,7 @@ def checkName(name):
     """ 
     
     for cell in userDB['A']:
-        if cell.value == name:
+        if cell.value.lower() == name.lower():
             return True
         elif cell.value == None or cell.value == "":
             break

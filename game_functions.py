@@ -222,15 +222,15 @@ async def gameDM(client, message):
                         
                     # Send response to the game channel
                     if(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "KICKOFF"):
-                        await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
-                                                    + "Please submit either **normal**, **onside**, or **squib** and your number")
-                        updatePossession(gameChannel, gameInfo["away name"])
-                        await messageConfirmationUser(client, homeDiscordUser, number)
-                    elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **normal**, **onside**, or **squib** and your number")
-                        updatePossession(gameChannel, gameInfo["home name"])
+                        updatePossession(gameChannel, gameInfo["away name"])
                         await messageConfirmationUser(client, awayDiscordUser, number)
+                    elif(gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF"):
+                        await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
+                                                    + "Please submit either **normal**, **onside**, or **squib** and your number")
+                        updatePossession(gameChannel, gameInfo["home name"])
+                        await messageConfirmationUser(client, homeDiscordUser, number)
                     elif(gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL"):
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **run**, **pass**, **punt**, **field goal**, **kneel**, or **spike** and your number")
@@ -691,10 +691,10 @@ async def twoPointResult(client, message, gameInfo, result, playType, offenseTea
 
     if(str(gameInfo["possession"]) == str(gameInfo["home name"])):
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
-        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
+        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
     else:
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
-        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
+        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
       
     updateDown(message.channel, 1)
     updateDistance(message.channel, 10)
@@ -779,10 +779,10 @@ async def patResult(client, message, gameInfo, result, playType, offenseTeam, de
     
     if(str(gameInfo["possession"]) == str(gameInfo["home name"])):
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
-        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
+        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
     else:
         defenseDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
-        updateBallLocation(message.channel, str(gameInfo["home name"]) + " 35")
+        updateBallLocation(message.channel, str(gameInfo["away name"]) + " 35")
        
     updateDown(message.channel, 1)
     updateDistance(message.channel, 10)
@@ -1673,9 +1673,9 @@ async def normalPlayType(client, message, gameInfo, result, playType, offenseUse
                 finalResult = finalResult + " It won't be good enough for a first down! Turnover on downs\n"
                 updateDown(message.channel, 1)
                 updateDistance(message.channel, 10)
+                updatePossession(message.channel, defenseTeam)
                 newYardLine = convertYardLineBack(100-updatedYardLine, gameInfo)
                 updateBallLocation(message.channel, newYardLine)
-                updatePossession(message.channel, defenseTeam)
                 updateClockStopped(message.channel, "YES")
                 updatePlayType(message.channel, "CHANGE OF POSSESSION")
                 turnoverOnDownsFlag = True
@@ -1795,6 +1795,7 @@ async def turnoverType(client, message, gameInfo, result, playType, offenseUser,
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100-yardLine
     updatedYardLine = updatedYardLine - turnoverDistance
+    updatePossession(message.channel, defenseTeam)
     
     # Handle touchdown
     if(updatedYardLine <= 0):
@@ -1815,7 +1816,6 @@ async def turnoverType(client, message, gameInfo, result, playType, offenseUser,
         updateBallLocation(message.channel, newYardLine)
         
     updateClockStopped(message.channel, "YES")
-    updatePossession(message.channel, defenseTeam)
     updateDown(message.channel, "1")
     updateDistance(message.channel, "10")
     convertTime(message.channel, gameInfo, result[1])

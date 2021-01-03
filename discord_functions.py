@@ -488,7 +488,7 @@ async def handleViewCommand(client, message):
             return
         else:
             await message.channel.send("There was an issue getting " + teamName + " information, verify the team name is correct")
-            print("There was an issue deleting " + teamName)
+            print("There was an issue getting information for " + teamName)
             return
     except:
         await message.channel.send("There was an issue getting the team information, please ensure you used the right command by using '&help' and then contact Dick")
