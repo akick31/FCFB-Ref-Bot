@@ -105,8 +105,8 @@ async def editEmbed(client, gameInfo, url):
         oldEmbed = await gameLogChannel.fetch_message(gameInfo["embedded message"])
         await oldEmbed.edit(embed=embed)
     except:
-        print("Could not edit game log, likely because the game log for this game doesn't exist anymore")
-        return
+        print("Could not edit game log, likely because the game log for this game doesn't exist anymore. Error due to " + str(Exception))
+        raise Exception
     
     
 
@@ -260,8 +260,8 @@ async def handleStartCommand(client, message, category):
             print(channel.name + " was successfully started")
         except:
             await message.channel.send("There was an issue starting the game, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue starting " + message.content.split('&start')[1].strip())
-            return
+            print("There was an issue starting " + message.content.split('&start')[1].strip() + " due to " + str(Exception))
+            raise Exception
     else:
         return
     
@@ -280,9 +280,11 @@ async def handleEndCommand(message):
             awayTeam = command.split("vs")[1].strip()
 
             gameChannel = None
+            name = homeTeam.lower() + " vs " + awayTeam.lower()
+            channelName = name.replace(" ", "-")
+            if "&" in channelName:
+                channelName = channelName.replace("&", "")
             for channel in message.guild.channels:
-                name = homeTeam.lower() + " vs " + awayTeam.lower()
-                channelName = name.replace(" ", "-")
                 if channel.name == channelName:
                     gameChannel = channel
                     break
@@ -306,8 +308,8 @@ async def handleEndCommand(message):
                 return
         except:
             await message.channel.send("There was an issue ending the game, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue ending " + message.channel.name)
-            return
+            print("There was an issue ending " + message.channel.name + " due to " + str(Exception))
+            raise Exception
     else:
         return
     
@@ -325,9 +327,11 @@ async def handleDeleteCommand(client, message):
             awayTeam = command.split("vs")[1].strip()
 
             gameChannel = None
+            name = homeTeam.lower() + " vs " + awayTeam.lower()
+            channelName = name.replace(" ", "-")
+            if "&" in channelName:
+                channelName = channelName.replace("&", "")
             for channel in message.guild.channels:
-                name = homeTeam.lower() + " vs " + awayTeam.lower()
-                channelName = name.replace(" ", "-")
                 if channel.name == channelName:
                     gameChannel = channel
                     break
@@ -355,8 +359,8 @@ async def handleDeleteCommand(client, message):
                 return
         except:
             await message.channel.send("There was an issue deleting the game, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue deleting " + message.channel.name)
-            return
+            print("There was an issue deleting " + message.channel.name + "due to " + str(Exception))
+            raise Exception
     else:
         return
     
@@ -440,8 +444,8 @@ async def handleCreateCommand(message):
 
         except:
             await message.channel.send("There was an issue creating the team, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue creating the team made by " + message.author.name)
-            return
+            print("There was an issue creating the team made by " + message.author.name + " due to " + str(Exception))
+            raise Exception
     else:
         return
     
@@ -468,10 +472,10 @@ async def handleRemoveCommand(message):
                 await message.channel.send("There was an issue deleting " + teamName + ", verify the team name is correct")
                 print("There was an issue deleting " + teamName)
                 return
-        except:
+        except Exception:
             await message.channel.send("There was an issue deleting the team, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue deleting " + message.content.split('&remove')[1].strip())
-            return
+            print("There was an issue deleting " + message.content.split('&remove')[1].strip() + "due to " + str(Exception))
+            raise Exception
     else:
         return
     
@@ -500,8 +504,8 @@ async def handleViewCommand(message):
                 return
         except:
             await message.channel.send("There was an issue getting the team information, please ensure you used the right command by using '&help' and then contact Dick")
-            print("There was an issue getting information for " + message.content.split('&view')[1].strip())
-            return
+            print("There was an issue getting information for " + message.content.split('&view')[1].strip() + " due to " + str(Exception))
+            raise Exception
     else:
         return
         
@@ -608,7 +612,7 @@ def loginDiscord():
         print('Logged in as')
         print(client.user.name)
         print(client.user.id)
-        print("v1.0.1")
+        print("v1.0.2")
         print('------')
 
     client.run(token)

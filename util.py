@@ -34,6 +34,43 @@ def hasNumbers(inputString):
 
     return any(char.isdigit() for char in inputString)
 
+
+def getScoreboardString(message, difference, down, possessingTeam, waitingOnUser):
+    """
+    Get the scoreboard string for the message on Discord
+
+    """
+
+    gameInfo = getGameInfo(message.channel)
+    if gameInfo["clock stopped"] == "YES":
+        scoreBoard = ("**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n"
+                    + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n"
+                    + "**Difference:** " + str(difference) + "\n\n"
+                    + "==========================\n"
+                    + "**Q" + str(gameInfo["quarter"]) + " | " + str(gameInfo["time"]) + " | " + str(gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                    + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(gameInfo["yard line"]) + " | :football: " + possessingTeam + "\n"
+                    + "The clock is stopped\n"
+                    + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                    + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                    + "==========================\n"
+                    + "\n\n**Waiting on " + waitingOnUser.mention + " for a number.**\n\n")
+    else:
+        scoreBoard = ("**Offensive Number: **" + str(gameInfo["offensive number"]) + "\n"
+                      + "**Defensive Number:** " + str(gameInfo["defensive number"]) + "\n"
+                      + "**Difference:** " + str(difference) + "\n\n"
+                      + "==========================\n"
+                      + "**Q" + str(gameInfo["quarter"]) + " | " + str(gameInfo["time"]) + " | " + str(
+                    gameInfo["home name"]) + " " + str(gameInfo["home score"]) + " " + str(
+                    gameInfo["away name"]) + " " + str(gameInfo["away score"]) + "**\n"
+                      + str(down) + " & " + str(gameInfo["distance"]) + " | " + str(
+                    gameInfo["yard line"]) + " | :football: " + possessingTeam + "\n"
+                      + "The clock is moving\n"
+                      + str(gameInfo["home name"]) + " has " + str(gameInfo["home timeouts"]) + " timeouts\n"
+                      + str(gameInfo["away name"]) + " has " + str(gameInfo["away timeouts"]) + " timeouts\n"
+                      + "==========================\n"
+                      + "\n\n**Waiting on " + waitingOnUser.mention + " for a number.**\n\n")
+    return scoreBoard
+
  
 def convertYardLine(gameInfo):
     """

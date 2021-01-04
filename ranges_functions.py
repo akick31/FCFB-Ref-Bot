@@ -219,7 +219,8 @@ def getPlayResultRow(matchupColumnNum, difference):
             if matchupColumn[i] == difference:
                 resultRow = i
                 break
-                
+    if resultRow == 0:
+        print("Could not find the row in the range sheet that the result was")
     return resultRow          
   
            
@@ -423,7 +424,7 @@ def getPuntResultRow(message, difference):
         resultsColumn.append(puntRanges.cell_value(i, 0))
         
     # Iterate through each row in the column and fine what bucket the difference falls into
-    for i in range(4, len(fieldPositionColumn)):
+    for i in range(3, len(fieldPositionColumn)):
         if "-" in str(fieldPositionColumn[i]):
             minNum = int(fieldPositionColumn[i].split("-")[0])
             maxNum = int(fieldPositionColumn[i].split("-")[1])
@@ -434,7 +435,8 @@ def getPuntResultRow(message, difference):
             if fieldPositionColumn[i] == difference:
                 resultRow = i
                 break
-                
+    if resultRow == 0:
+        print("Could not find the row in the range sheet that the result was")
     return resultRow       
     
 
@@ -467,7 +469,9 @@ def getNormalKickoffResultRow(difference):
             if differencesColumn[i] == difference:
                 resultRow = i
                 break
-                
+
+    if resultRow == 0:
+        print("Could not find the row in the range sheet that the result was")
     return resultRow  
   
 
