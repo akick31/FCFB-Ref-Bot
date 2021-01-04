@@ -75,15 +75,15 @@ def getGameInfoDM(user):
     
     """
     
-    rowNum = 0
-    found = 0
+    rowNum = 1
+    found = False
     for cell in ongoingGames['D']:
         if cell.value == str(user):
-            found = 1
+            found = True
             break
         else:
             rowNum = rowNum + 1
-    if found != 1:
+    if found is False:
         rowNum = 1
         for cell in ongoingGames['P']:
             if cell.value == str(user):
@@ -533,28 +533,26 @@ def updateWaitingOn(channel):
     
     """   
     
-    rowNum = 0
+    rowNum = 1
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
             break
         else:
             rowNum = rowNum + 1
-            
-    rowNum = rowNum + 1
     
     waitingOn = "NO ONE"
     
     gameInfo = getGameInfo(channel)
-    if gameInfo["play type"] == "KICKOFF":
-        if gameInfo["possession"] == gameInfo["home name"]:
-            waitingOn = gameInfo["away user"]
-        elif gameInfo["possession"] == gameInfo["away name"]:
-            waitingOn = gameInfo["home user"]
-    else:
-        if gameInfo["possession"] == gameInfo["home name"]:
-            waitingOn = gameInfo["home user"]
-        elif gameInfo["possession"] == gameInfo["away name"]:
-            waitingOn = gameInfo["away user"]
+    # if gameInfo["play type"] == "KICKOFF":
+    #     if gameInfo["possession"] == gameInfo["home name"]:
+    #         waitingOn = gameInfo["away user"]
+    #     elif gameInfo["possession"] == gameInfo["away name"]:
+    #         waitingOn = gameInfo["home user"]
+    # else:
+    if gameInfo["possession"] == gameInfo["home name"]:
+        waitingOn = gameInfo["home user"]
+    elif gameInfo["possession"] == gameInfo["away name"]:
+        waitingOn = gameInfo["away user"]
     
     ongoingGames.cell(row = rowNum, column = 34).value = waitingOn  # waiting on
     openpyxlGameWorkbook.save('game_database.xlsx')
@@ -566,14 +564,12 @@ def updateWaitingOnKickoffDM(channel):
     
     """   
     
-    rowNum = 0
+    rowNum = 1
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
             break
         else:
             rowNum = rowNum + 1
-            
-    rowNum = rowNum + 1
     
     waitingOn = "NO ONE"
     

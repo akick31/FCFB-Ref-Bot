@@ -221,12 +221,12 @@ async def gameDM(client, message):
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
                                                 + "Please submit either **normal**, **onside**, or **squib** and "
                                                 + "your number")
-                        updatePossession(gameChannel, gameInfo["away name"])
+                        updatePossession(gameChannel, gameInfo["home name"])
                         await messageConfirmationUser(awayDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["away name"] and gameInfo["play type"] == "KICKOFF":
                         await gameChannel.send("The opposing team has submitted their number, " + awayDiscordUser.mention + " you're up!\n\n"
                                                     + "Please submit either **normal**, **onside**, or **squib** and your number")
-                        updatePossession(gameChannel, gameInfo["home name"])
+                        updatePossession(gameChannel, gameInfo["away name"])
                         await messageConfirmationUser(homeDiscordUser, number)
                     elif gameInfo["possession"] == gameInfo["home name"] and gameInfo["play type"] == "NORMAL":
                         await gameChannel.send("The opposing team has submitted their number, " + homeDiscordUser.mention + " you're up!\n\n"
