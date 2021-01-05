@@ -45,9 +45,10 @@ from util import convertYardLineBack
 from util import getClockRunoff
 from util import getScoreboardString
 
-with open('FCFB-Ref-Bot/config.json') as f:
+with open('config.json') as f:
     data = json.load(f)
-guildID = json.loads(data)["guildID"]
+jsonData = json.dumps(data)
+guildID = json.loads(jsonData)["guildID"]
 
 """
 Functions that handle the game logic for a college football game

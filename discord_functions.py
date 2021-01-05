@@ -31,10 +31,11 @@ Handle the Discord side of the bot. Look for messages and post responses
 """
 
 helpMessage = "There was an issue with your command, please type '&help' and double check you entered the command correctly"
-with open('FCFB-Ref-Bot/config.json') as f:
+with open('config.json') as f:
     data = json.load(f)
-token = json.loads(data)["discordToken"]
-guildID = json.loads(data)["guildID"]
+jsonData = json.dumps(data)
+token = json.loads(jsonData)["discordToken"]
+guildID = json.loads(jsonData)["guildID"]
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
                 + "&start - starts games\n"
                 + "&end - ends games and saves them\n" 
