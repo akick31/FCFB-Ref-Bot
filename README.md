@@ -46,7 +46,7 @@ into the guildID bracket in the config file. There should be no quotations or br
    + your repository name and copy and paste that into the logRepository section
     of the config file. For example, for me it was "akick31/FCFB-Score-Logs"
 
-10. In Github, go to your profile settings->Developer settings->OAuth Apps->
+10. In Github, go to your profile settings->Developer settings->Personal Access Tokens->
     Generate your token
     
 11. Once everything is all set up, run "python3 FCFBRefBot.py". Do not post your config
