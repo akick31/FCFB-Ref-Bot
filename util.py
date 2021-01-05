@@ -259,3 +259,40 @@ def getClockRunoff(message, offensivePlaybook, clockRunoffType):
         return clockRunoff
     else:
         return 0
+
+def handleHalftime(message, gameInfo):
+    """
+    Handle halftime updates for the DB and set up the kickoff
+
+    """
+
+    updatePlayType(message.channel, "KICKOFF")
+    updateClockStopped(message.channel, "YES")
+
+    if gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "receive":
+        updatePossession(message.channel, gameInfo["away name"])  # home team is kicking off
+        await message.channel.send("It is halftime, " + gameInfo["away name"] + " is kicking off")
+    elif gameInfo["coin toss winner"] == gameInfo["home user"] and gameInfo["coin toss decision"] == "defer":
+        updatePossession(message.channel, gameInfo["home name"])  # home team is receiving
+        await message.channel.send("It is halftime, " + gameInfo["home name"] + " is kicking off")
+    elif gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "receive":
+        updatePossession(message.channel, gameInfo["home name"])  # away team is kicking off
+        await message.channel.send("It is halftime, " + gameInfo["home name"] + " is kicking off")
+    elif gameInfo["coin toss winner"] == gameInfo["away user"] and gameInfo["coin toss decision"] == "defer":
+        updatePossession(message.channel, gameInfo["away name"])  # away team is receiving
+        await message.channel.send("It is halftime, " + gameInfo["away name"] + " is kicking off")
+
+    gameInfo = getGameInfo(message.channel)
+    if str(gameInfo["possession"]) == str(gameInfo["home name"]):
+        waitingOnUser = getDiscordUser(client, str(gameInfo["home user"]))
+    else:
+        waitingOnUser = getDiscordUser(client, str(gameInfo["away user"]))
+    await message.channel.send("Please ignore all DMs sent immediately before halftime\n"
+                               + "**Waiting on " + waitingOnUser.mention + " for a message")
+    await messageUser(waitingOnUser, gameInfo)
+
+    updateHomeTimeouts(message.channel, 3)
+    updateAwayTimeouts(message.channel, 3)
+    updateDown(message.channel, 1)
+    updateDistance(message.channel, 10)
+    updateHalftime(message.channel, "NO")
