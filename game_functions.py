@@ -1,5 +1,6 @@
 import random
 import re
+import json
 from ranges_functions import getFinalKickoffResult
 from ranges_functions import getFinalPlayResult
 from ranges_functions import getFinalPointAfterResult
@@ -44,7 +45,9 @@ from util import convertYardLineBack
 from util import getClockRunoff
 from util import getScoreboardString
 
-guildID = 398332149335326720
+with open('FCFB-Ref-Bot/config.json') as f:
+    data = json.load(f)
+guildID = json.loads(data)["guildID"]
 
 """
 Functions that handle the game logic for a college football game

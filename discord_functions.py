@@ -1,4 +1,5 @@
 import discord
+import json
 from user_database_functions import getUser
 from user_database_functions import getNickname
 from user_database_functions import getOffensivePlaybook
@@ -30,8 +31,10 @@ Handle the Discord side of the bot. Look for messages and post responses
 """
 
 helpMessage = "There was an issue with your command, please type '&help' and double check you entered the command correctly"
-guildID = 398332149335326720
-token = 'NzIzMzkwOTgxMTg5MjcxNjUz.Xuw8WQ.FUKbyJx2B5ylPBm2zpF0fBjPhlw'
+with open('FCFB-Ref-Bot/config.json') as f:
+    data = json.load(f)
+token = json.loads(data)["discordToken"]
+guildID = json.loads(data)["guildID"]
 commandMessage = ("===================\nCOMMANDS\n===================\n" 
                 + "&start - starts games\n"
                 + "&end - ends games and saves them\n" 
