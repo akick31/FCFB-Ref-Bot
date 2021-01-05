@@ -94,7 +94,7 @@ async def editEmbed(client, gameInfo, url):
     else:
         score = str(homeScore) + "-" + str(awayScore) + " Tied"
     embed.add_field(name="Score", value=score, inline=False)
-    embed.add_field(name="Clock", value=gameInfo["time"] + " left in Q" + str(gameInfo["quarter"]), inline=False)
+    embed.add_field(name="Clock", value=str(gameInfo["time"]) + " left in Q" + str(gameInfo["quarter"]), inline=False)
     embed.add_field(name="Possession", value=":football: " + gameInfo["possession"], inline=True)
     embed.add_field(name="Yard Line", value=gameInfo["yard line"], inline=True)
     down = convertDown(str(gameInfo["down"]))

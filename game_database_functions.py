@@ -438,11 +438,15 @@ def updateOnsideKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
             
     rowNum = rowNum + 1
     yardLine = ""
-    
+
     if possession == homeTeam and result == "Recovered":
         yardLine = awayTeam + " 45"
     elif possession == homeTeam and result == "No Good":
         yardLine = homeTeam + " 45"
+    elif possession == awayTeam and result == "Recovered":
+        yardLine = homeTeam + " 45"
+    elif possession == awayTeam and result == "No Good":
+        yardLine = awayTeam + " 45"
     elif possession == homeTeam and result == "Returned TD":
         yardLine = awayTeam + " 3"
     elif possession == awayTeam and result == "Returned TD":
@@ -733,14 +737,12 @@ def updateHalftime(channel, status):
     Update if the defensive number has been submitted
     
     """ 
-    rowNum = 0
+    rowNum = 1
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
             break
         else:
             rowNum = rowNum + 1
-            
-    rowNum = rowNum + 1
     
     ongoingGames.cell(row = rowNum, column = 43).value = str(status)  # status
     openpyxlGameWorkbook.save('game_database.xlsx')
