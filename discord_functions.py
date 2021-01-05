@@ -12,7 +12,9 @@ from game_database_functions import getGameInfo
 from game_database_functions import checkUserFree
 from game_database_functions import updateEmbeddedMessage
 from github_functions import getLogFileURL
+from github_functions import getLogFile
 from github_functions import createLogFile
+from github_functions import deleteLogFile
 from user_database_functions import checkName
 from user_database_functions import checkUser
 from user_database_functions import addUser
@@ -360,6 +362,7 @@ async def handleDeleteCommand(client, message):
                     await embedMessage.delete()
 
                 deleteGameData(message.channel)
+                deleteLogFile(gameInfo["gist link"])
                 await gameChannel.delete()
                 print(gameChannel.name + " was successfully deleted")
                 return
