@@ -247,6 +247,11 @@ async def handleStartCommand(client, message, category):
             homeDiscordUser = getDiscordUser(client, homeUser)
             awayDiscordUser = getDiscordUser(client, awayUser)
 
+            if homeDiscordUser == "COULD NOT FIND":
+                await message.channel.send("Could not find the discord user " + homeUser + ". Please verify it is correct.")
+            elif awayDiscordUser == "COULD NOT FIND":
+                await message.channel.send("Could not find the discord user " + awayUser + ". Please verify it is correct.")
+
             await createLogFile(channel, homeTeam, awayTeam)
 
             gameInfo = getGameInfo(channel)
