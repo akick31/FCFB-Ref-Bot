@@ -43,7 +43,7 @@ into the guildID bracket in the config file. There should be no quotations or br
    
 9. Navigate to github.com and create a Github account and then create a repository. 
    named mine FCFB-Score-Logs. Whatever you name it, take your GitHub Username
-   + your repository name and copy and paste that into the logRepository section
+   plus your repository name and copy and paste that into the logRepository section
     of the config file. For example, for me it was "akick31/FCFB-Score-Logs"
 
 10. In Github, go to your profile settings->Developer settings->Personal Access Tokens->

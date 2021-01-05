@@ -1008,6 +1008,7 @@ async def fieldGoalMiss(message, gameInfo, result, kickingUser, kickingTeam, def
 
     yardLine = convertYardLine(gameInfo)
     fieldGoalDistance = yardLine + 17
+    updatePossession(message.channel, defenseTeam)
 
     yardLine = convertYardLine(gameInfo)  # Line of scrimmage
     if yardLine >= 20:
@@ -1043,6 +1044,7 @@ async def fieldGoalBlocked(message, gameInfo, result, kickingUser, defenseTeam, 
 
     yardLine = convertYardLine(gameInfo)
     fieldGoalDistance = yardLine + 17
+    updatePossession(message.channel, defenseTeam)
 
     yardLine = convertYardLine(gameInfo)  # Line of scrimmage
     if yardLine >= 20:
@@ -1078,6 +1080,7 @@ async def fieldGoalKickSix(message, gameInfo, result, kickingUser, kickingTeam, 
 
     yardLine = convertYardLine(gameInfo)
     fieldGoalDistance = yardLine + 17
+    updatePossession(message.channel, defenseTeam)
 
     updateBallLocation(message.channel, kickingTeam + " 3")
     updatePlayType(message.channel, "TOUCHDOWN")
