@@ -257,7 +257,7 @@ def getClockRunoff(message, offensivePlaybook, clockRunoffType):
     else:
         return 0
 
-def handleHalftime(client, message, gameInfo):
+async def handleHalftime(client, message, gameInfo):
     """
     Handle halftime updates for the DB and set up the kickoff
 

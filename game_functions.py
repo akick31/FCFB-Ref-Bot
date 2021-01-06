@@ -499,7 +499,7 @@ async def normalPlay(client, message, gameInfo):
 
                         # Handle halftime
                         elif int(gameInfo["quarter"]) == 3 and gameInfo["time"] == "7:00":
-                            handleHalftime(client, message, gameInfo)
+                            await handleHalftime(client, message, gameInfo)
 
                     return "VALID"
     except Exception:
@@ -647,7 +647,7 @@ async def pointAfterPlay(client, message, gameInfo):
 
                     # Handle halftime
                     elif int(gameInfo["quarter"]) == 3 and gameInfo["time"] == "7:00":
-                        handleHalftime(client, message, gameInfo)
+                        await handleHalftime(client, message, gameInfo)
 
                 return "VALID"
     except Exception:
