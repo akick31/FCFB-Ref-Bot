@@ -372,32 +372,34 @@ def getFieldPositionColumnNum(yardLine):
     
     """
     
-    if 100 >= yardLine >= 66:
+    if 100 >= yardLine >= 71:
         return 1
-    elif 65 >= yardLine >= 61:
+    elif 70 >= yardLine >= 66:
         return 2
-    elif 60 >= yardLine >= 56:
+    elif 65 >= yardLine >= 61:
         return 3
-    elif 55 >= yardLine >= 51:
+    elif 60 >= yardLine >= 56:
         return 4
-    elif 50 >= yardLine >= 46:
+    elif 55 >= yardLine >= 51:
         return 5
-    elif 45 >= yardLine >= 41:
+    elif 50 >= yardLine >= 46:
         return 6
-    elif 40 >= yardLine >= 36:
+    elif 45 >= yardLine >= 41:
         return 7
-    elif 35 >= yardLine >= 31:
+    elif 40 >= yardLine >= 36:
         return 8
-    elif 30 >= yardLine >= 26:
+    elif 35 >= yardLine >= 31:
         return 9
-    elif 25 >= yardLine >= 21:
+    elif 30 >= yardLine >= 26:
         return 10
-    elif 20 >= yardLine >= 15:
+    elif 25 >= yardLine >= 21:
         return 11
-    elif 15 >= yardLine >= 11:
+    elif 20 >= yardLine >= 16:
         return 12
-    elif 10 >= yardLine >= 6:
+    elif 15 >= yardLine >= 11:
         return 13
+    elif 10 >= yardLine >= 6:
+        return 14
     elif 5 >= yardLine >= 1:
         return 14
     else:

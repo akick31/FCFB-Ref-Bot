@@ -32,6 +32,10 @@ from game_database_functions import updateHalftime
 from user_database_functions import updateRecord
 from github_functions import getLogFile
 from github_functions import updateLogFile
+from stats_functions import updatePuntResult
+from stats_functions import updateSquibKickoffResult
+from stats_functions import updateOnsideKickoffResult
+from stats_functions import updateNormalKickoffResult
 from util import messageUser
 from util import messageConfirmationUser
 from util import getDiscordUser
@@ -470,6 +474,7 @@ async def normalPlay(client, message, gameInfo):
                             await playResult(client, message, gameInfo, result, playType, offenseTeam, defenseTeam, difference)
                         elif playType == "punt":
                             await puntResult(client, message, gameInfo, result, offenseTeam, defenseTeam, difference)
+                            updatePuntResult(result)
                         elif playType == "field goal":
                             await fieldGoalResult(client, message, gameInfo, result, offenseTeam, defenseTeam, difference)
                         elif playType == "kneel":
@@ -1610,10 +1615,13 @@ async def fumbleReturnKickoff(message, gameInfo, result, playType, difference, k
     updatePossession(message.channel, kickingTeam)
     if playType == "normal":
         updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateNormalKickoffResult(result)
     elif playType == "squib":
         updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateSquibKickoffResult(result)
     elif playType == "onside":
         updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateOnsideKickoffResult(result)
 
     if kickingTeam == gameInfo["home name"]:
         updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
@@ -1642,10 +1650,13 @@ async def fumbleKickoff(message, gameInfo, result, playType, difference, kicking
     updatePossession(message.channel, kickingTeam)
     if playType == "normal":
         updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateNormalKickoffResult(result)
     elif playType == "squib":
         updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateSquibKickoffResult(result)
     elif playType == "onside":
         updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateOnsideKickoffResult(result)
 
     gameInfo = getGameInfo(message.channel)
     updateDown(message.channel, "1")
@@ -1669,17 +1680,26 @@ async def normalKickoff(message, gameInfo, result, playType, difference, returnT
     updatePossession(message.channel, returnTeam)
     if playType == "normal":
         updateNormalKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateNormalKickoffResult(result)
     elif playType == "squib":
         updateSquibKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateSquibKickoffResult(result)
     elif playType == "onside":
         updateOnsideKickoffBallLocation(message.channel, str(gameInfo["home name"]), str(gameInfo["away name"]), str(result[0]), str(gameInfo["possession"]))
+        updateOnsideKickoffResult(result)
     updateDown(message.channel, "1")
     updateDistance(message.channel, "10")
 
     gameInfo = getGameInfo(message.channel)
     down = convertDown(str(gameInfo["down"]))
 
-    if str(result[0]) != "Returned TD":
+    if str(result[0]) == "25":
+        await message.channel.send("It's a touchback.\n\n"
+                                   + "**Result:** Touchback\n"
+                                   + getScoreboardString(message, difference, down, returnTeam, kickingUser))
+        await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN", "RETURN TO THE " + str(gameInfo["yard line"]).upper(), result[1])
+        updatePlayType(message.channel, "NORMAL")
+    elif str(result[0]) != "Returned TD":
         await message.channel.send("It's a kickoff taken by " + returnTeam + " to the " + gameInfo["yard line"] + "\n\n"
                                    + "**Result:** Return to the " + gameInfo["yard line"] + "\n"
                                    + getScoreboardString(message, difference, down, returnTeam, kickingUser))
