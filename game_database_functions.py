@@ -372,9 +372,9 @@ def updateNormalKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     elif possession == awayTeam and result == "Returned TD":
         yardLine = awayTeam + " 3"
     elif possession == homeTeam and result == "Fumble":
-        yardLine = awayTeam + "20"
+        yardLine = awayTeam + " 20"
     elif possession == awayTeam and result == "Fumble":
-        yardLine = homeTeam + "20"
+        yardLine = homeTeam + " 20"
     elif possession == homeTeam and result == "Touchdown":
         yardLine = awayTeam + " 3"
     elif possession == awayTeam and result == "Touchdown":
@@ -411,9 +411,9 @@ def updateSquibKickoffBallLocation(channel, homeTeam, awayTeam, result, possessi
     elif possession == awayTeam and result == "Returned TD":
         yardLine = awayTeam + " 3"
     elif possession == homeTeam and result == "Fumble":
-        yardLine = awayTeam + "30"
+        yardLine = awayTeam + " 30"
     elif possession == awayTeam and result == "Fumble":
-        yardLine = homeTeam + "30"
+        yardLine = homeTeam + " 30"
     elif possession == homeTeam and result == "Touchdown":
         yardLine = awayTeam + " 3"
     elif possession == awayTeam and result == "Touchdown":
