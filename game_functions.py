@@ -586,17 +586,17 @@ async def kickoffReturn(message, homeDiscordUser, awayDiscordUser, gameInfo):
                     if str(result[0]) == "Fumble":
                         if gameInfo["possession"] == gameInfo["home name"]:
                             await fumbleKickoff(message, gameInfo, result, playType, difference,
-                                                str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
+                                                str(gameInfo["home name"]), str(gameInfo["away name"]), awayDiscordUser)
                         if gameInfo["possession"] == gameInfo["away name"]:
                             await fumbleKickoff(message, gameInfo, result, playType, difference,
-                                                str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
+                                                str(gameInfo["away name"]), str(gameInfo["home name"]), homeDiscordUser)
                     if str(result[0]) == "Touchdown":
                         if gameInfo["possession"] == gameInfo["home name"]:
                             await fumbleReturnKickoff(message, gameInfo, result, playType, difference,
-                                                      str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
+                                                      str(gameInfo["home name"]), str(gameInfo["away name"]), awayDiscordUser)
                         if gameInfo["possession"] == gameInfo["away name"]:
                             await fumbleReturnKickoff(message, gameInfo, result, playType, difference,
-                                                      str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
+                                                      str(gameInfo["away name"]), str(gameInfo["home name"]), homeDiscordUser)
                     return "VALID"
     except Exception:
         print("Invalid kickoff due to " + str(Exception))
@@ -1584,6 +1584,7 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100-yardLine
     updatedYardLine = updatedYardLine - turnoverDistance
+    updatePossession(message.channel, defenseTeam)
 
     # Handle touchdown
     if updatedYardLine <= 0:
@@ -1603,7 +1604,6 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
         newYardLine = convertYardLineBack(updatedYardLine, gameInfo)
         updateBallLocation(message.channel, newYardLine)
 
-    updatePossession(message.channel, defenseTeam)
     updateClockStopped(message.channel, "YES")
     updateDown(message.channel, "1")
     updateDistance(message.channel, "10")
