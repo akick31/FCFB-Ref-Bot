@@ -499,7 +499,7 @@ async def normalPlay(client, message, gameInfo):
 
                         # Handle halftime
                         elif int(gameInfo["quarter"]) == 3 and gameInfo["time"] == "7:00":
-                            handleHalftime(message, gameInfo)
+                            handleHalftime(client, message, gameInfo)
 
                     return "VALID"
     except Exception:
@@ -647,7 +647,7 @@ async def pointAfterPlay(client, message, gameInfo):
 
                     # Handle halftime
                     elif int(gameInfo["quarter"]) == 3 and gameInfo["time"] == "7:00":
-                        handleHalftime(message, gameInfo)
+                        handleHalftime(client, message, gameInfo)
 
                 return "VALID"
     except Exception:
@@ -1465,7 +1465,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
 
         down = convertDown(str(gameInfo["down"]))
 
-        if incompleteFlag:
+        if incompleteFlag and turnoverOnDownsFlag is False:
             updateClockStopped(message.channel, "YES")
             await message.channel.send("The pass is incomplete\n\n"
                                        + "**Result:** Incomplete pass\n"

@@ -1,9 +1,6 @@
 import re
-from game_database_functions import updateTime
-from game_database_functions import updateQuarter
-from game_database_functions import updateGameStatus
-from game_database_functions import getGameInfo
-from game_database_functions import updateClockStopped
+from game_database_functions import updateTime, updatePossession, updatePlayType, updateHalftime, updateDistance, \
+    updateDown, updateAwayTimeouts, updateHomeTimeouts, getGameInfo, updateClockStopped, updateQuarter, updateGameStatus
 
 guildID = 398332149335326720
 
@@ -260,7 +257,7 @@ def getClockRunoff(message, offensivePlaybook, clockRunoffType):
     else:
         return 0
 
-def handleHalftime(message, gameInfo):
+def handleHalftime(client, message, gameInfo):
     """
     Handle halftime updates for the DB and set up the kickoff
 
