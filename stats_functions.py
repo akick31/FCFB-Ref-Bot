@@ -12,6 +12,7 @@ def updateNormalKickoffResult(result):
 
     """
 
+    result = str(result[0])
     rowNum = 1
 
     # Find the latest row
@@ -80,6 +81,7 @@ def updateSquibKickoffResult(result):
 
     """
 
+    result = str(result[0])
     rowNum = 1
 
     # Find the latest row
@@ -136,6 +138,7 @@ def updateOnsideKickoffResult(result):
 
     """
 
+    result = str(result[0])
     rowNum = 1
 
     # Find the latest row
@@ -172,6 +175,7 @@ def updatePuntResult(result):
 
     """
 
+    result = str(result[0])
     rowNum = 1
 
     # Find the latest row

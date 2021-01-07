@@ -1126,13 +1126,14 @@ async def punt(message, result, puntUser, returnTeam, difference):
     Update the database and post the message for a standard punt return
     
     """
-    updatePossession(message.channel, returnTeam)
+
     gameInfo = getGameInfo(message.channel)
     puntYardage = int(result[0])
     yardLine = convertYardLine(gameInfo)  # Line of scrimmage
     updatedYardLine = yardLine - puntYardage
-    updatedYardLine = 100 - updatedYardLine  # Flip the yard line to the opponent's side
+    updatedYardLine = 100-updatedYardLine  # Flip the yard line to the opponent's side
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
+    updatePossession(message.channel, returnTeam)
 
     updateBallLocation(message.channel, convertedYardLine)
     updatePlayType(message.channel, "NORMAL")
@@ -1189,11 +1190,12 @@ async def puntBlock(message, result, puntUser, returnTeam, difference):
     Update the database and post the message for a blocked punt return
     
     """
-    updatePossession(message.channel, returnTeam)
+
     gameInfo = getGameInfo(message.channel)
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100 - yardLine
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
+    updatePossession(message.channel, returnTeam)
 
     updateBallLocation(message.channel, convertedYardLine)
     updatePlayType(message.channel, "NORMAL")
@@ -1217,10 +1219,12 @@ async def puntTouchback(message, result, puntUser, puntTeam, returnTeam, differe
     Update the database and post the message for a touchback punt
     
     """
-    updatePossession(message.channel, returnTeam)
+
     gameInfo = getGameInfo(message.channel)
     updatedYardLine = 80
+    updatePossession(message.channel, returnTeam)
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
+    updatePossession(message.channel, returnTeam)
 
     updateBallLocation(message.channel, convertedYardLine)
     updatePlayType(message.channel, "NORMAL")
@@ -1244,11 +1248,12 @@ async def puntFumble(message, result, returnUser, puntTeam, returnTeam, differen
     Update the database and post the message for a muffed punt
     
     """
-    updatePossession(message.channel, puntTeam)
+
     gameInfo = getGameInfo(message.channel)
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = int(yardLine) - 40
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
+    updatePossession(message.channel, returnTeam)
 
     # Handle touchdown
     if updatedYardLine <= 0:
