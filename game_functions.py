@@ -169,11 +169,10 @@ async def gameDM(client, message):
     homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
     awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
 
-    if gameInfo["waiting on"] != message.author and gameInfo["number submitted"] == "YES":
-        if gameInfo["possession"] == gameInfo["home name"]:
-            await awayDiscordUser.send("I am not waiting on a message from you")
-        elif gameInfo["possession"] == gameInfo["away name"]:
-            await homeDiscordUser.send("I am not waiting on a message from you")
+    if gameInfo["waiting on"].split("#")[0] == str(message.author.name) and gameInfo["number submitted"] == "YES":
+        await message.author.send("I am not waiting on a message from you")
+    elif gameInfo["waiting on"].split("#")[0] != str(message.author.name):
+        await message.author.send("I am not waiting on a message from you")
     else:
         # Get the guild so you update the correct channel
         guild = client.get_guild(guildID)
@@ -287,6 +286,8 @@ async def gameDM(client, message):
                         updateWaitingOn(gameChannel)
 
                     updateNumberSubmitted(gameChannel, "YES")
+        else:
+            await message.author.send("I could not find one of the Discord users in the game database. Did a user change their username?")
 
 
 #########################
