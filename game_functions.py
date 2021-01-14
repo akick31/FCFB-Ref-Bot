@@ -165,10 +165,12 @@ async def gameDM(client, message):
     homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
     awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
 
-    if gameInfo["waiting on"] is None and message.author.name != "FCFB Ref Bot":
+    if message.author.name == "FCFB Ref Bot":
+        return
+    elif gameInfo["waiting on"] is None:
         await message.author.send("There doesn't seem to be anyone I am waiting on in your game. Contact Dick")
         return
-    if gameInfo["waiting on"].split("#")[0] == str(message.author.name) and gameInfo["number submitted"] == "YES":
+    elif gameInfo["waiting on"].split("#")[0] == str(message.author.name) and gameInfo["number submitted"] == "YES":
         await message.author.send("I am not waiting on a message from you")
         return
     elif gameInfo["waiting on"].split("#")[0] != str(message.author.name):
