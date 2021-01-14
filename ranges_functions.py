@@ -207,7 +207,7 @@ def getPlayResultRow(matchupColumnNum, difference):
         matchupColumn.append(ranges.cell_value(i, matchupColumnNum))
         resultsColumn.append(ranges.cell_value(i, 0))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
+    # Iterate through each row in the column and find what bucket the difference falls into
     for i in range(4, len(matchupColumn)):
         if "-" in str(matchupColumn[i]):
             minNum = int(matchupColumn[i].split("-")[0])
@@ -324,7 +324,7 @@ def getFGResult(message, difference):
         
     fieldGoalDistance = int(yardLine) + 17
     
-    # Iterate through each row in the column and fine what bucket the distance falls into
+    # Iterate through each row in the column and find what bucket the distance falls into
     for i in range(4, len(distanceColumn)):
         if fieldGoalDistance == distanceColumn[i]:
             minNum = int(madeColumn[i].split("-")[0])
@@ -425,7 +425,7 @@ def getPuntResultRow(message, difference):
         fieldPositionColumn.append(puntRanges.cell_value(i, fieldPositionColumnNum))
         resultsColumn.append(puntRanges.cell_value(i, 0))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
+    # Iterate through each row in the column and find what bucket the difference falls into
     for i in range(3, len(fieldPositionColumn)):
         if "-" in str(fieldPositionColumn[i]):
             minNum = int(fieldPositionColumn[i].split("-")[0])
@@ -459,7 +459,7 @@ def getNormalKickoffResultRow(difference):
         differencesColumn.append(kickoffPATRanges.cell_value(i, 1))
         resultsColumn.append(kickoffPATRanges.cell_value(i, 0))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
+    # Iterate through each row in the column and find what bucket the difference falls into
     for i in range(7, len(differencesColumn)):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])
@@ -515,7 +515,7 @@ def getSquibKickoffResultRow(difference):
         differencesColumn.append(kickoffPATRanges.cell_value(i, 4))
         resultsColumn.append(kickoffPATRanges.cell_value(i, 3))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
+    # Iterate through each row in the column and find what bucket the difference falls into
     for i in range(7, len(differencesColumn)):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])
@@ -569,7 +569,7 @@ def getOnsideKickoffResultRow(difference):
         differencesColumn.append(kickoffPATRanges.cell_value(i, 7))
         resultsColumn.append(kickoffPATRanges.cell_value(i, 6))
         
-    # Iterate through each row in the column and fine what bucket the difference falls into
+    # Iterate through each row in the column and find what bucket the difference falls into
     for i in range(7, len(differencesColumn)):
         if "-" in str(differencesColumn[i]):
             minNum = int(differencesColumn[i].split("-")[0])

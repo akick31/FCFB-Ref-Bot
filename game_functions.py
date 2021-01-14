@@ -33,10 +33,10 @@ from game_database_functions import updateHalftime
 from user_database_functions import updateRecord
 from github_functions import getLogFile
 from github_functions import updateLogFile
-from stats_functions import updatePuntResult
-from stats_functions import updateSquibKickoffResult
-from stats_functions import updateOnsideKickoffResult
-from stats_functions import updateNormalKickoffResult
+from stats_database_functions import updatePuntResult
+from stats_database_functions import updateSquibKickoffResult
+from stats_database_functions import updateOnsideKickoffResult
+from stats_database_functions import updateNormalKickoffResult
 from util import messageUser
 from util import messageConfirmationUser
 from util import getDiscordUser
