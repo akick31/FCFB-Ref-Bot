@@ -17,6 +17,7 @@ from game_database_functions import updateOnsideKickoffBallLocation
 from game_database_functions import updateBallLocation
 from game_database_functions import updatePlayType
 from game_database_functions import updateWaitingOn
+from game_database_functions import updateWaitingOnUser
 from game_database_functions import updateWaitingOnKickoffDM
 from game_database_functions import updateClockStopped
 from game_database_functions import updateDown
@@ -78,7 +79,6 @@ async def game(client, message):
     # Handle coin toss decision
     elif str(message.author) == str(gameInfo["coin toss winner"]) and ('receive' in message.content.lower().strip() or 'defer' in message.content.lower().strip()) and gameInfo["coin toss decision"] == "NONE":
         await coinTossDecision(homeDiscordUser, awayDiscordUser, message, gameInfo)
-        updateWaitingOn(message.channel)
         updateNumberSubmitted(message.channel, "NO")
 
     # Handle kickoff return response
@@ -88,7 +88,6 @@ async def game(client, message):
         gameInfo = getGameInfo(message.channel)
         result = await kickoffReturn(message, homeDiscordUser, awayDiscordUser, gameInfo)
         if result != "INVALID":
-            updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
         else:
             await message.channel.send("There was an issue with determining the kickoff result")
@@ -102,7 +101,6 @@ async def game(client, message):
         gameInfo = getGameInfo(message.channel)
         result = await normalPlay(client, message, gameInfo)
         if result != "INVALID":
-            updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
         else:
             await message.channel.send("There was an issue with determining the play result")
@@ -114,7 +112,6 @@ async def game(client, message):
         gameInfo = getGameInfo(message.channel)
         result = await pointAfterPlay(client, message, gameInfo)
         if result != "INVALID":
-            updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
         else:
             await message.channel.send("There was an issue with determining the PAT result")
@@ -126,7 +123,6 @@ async def game(client, message):
         gameInfo = getGameInfo(message.channel)
         result = await safetyKickoff(client, message, gameInfo)
         if result != "INVALID":
-            updateWaitingOn(message.channel)
             updateNumberSubmitted(message.channel, "NO")
         else:
             await message.channel.send("There was an issue with determining the safety kickoff result")
@@ -169,10 +165,15 @@ async def gameDM(client, message):
     homeDiscordUser = getDiscordUser(client, str(gameInfo["home user"]))
     awayDiscordUser = getDiscordUser(client, str(gameInfo["away user"]))
 
+    if gameInfo["waiting on"] is None and message.author.name != "FCFB Ref Bot":
+        await message.author.send("There doesn't seem to be anyone I am waiting on in your game. Contact Dick")
+        return
     if gameInfo["waiting on"].split("#")[0] == str(message.author.name) and gameInfo["number submitted"] == "YES":
         await message.author.send("I am not waiting on a message from you")
+        return
     elif gameInfo["waiting on"].split("#")[0] != str(message.author.name):
         await message.author.send("I am not waiting on a message from you")
+        return
     else:
         # Get the guild so you update the correct channel
         guild = client.get_guild(guildID)
@@ -557,10 +558,10 @@ async def kickoffReturn(message, homeDiscordUser, awayDiscordUser, gameInfo):
                     if str(result[0]) != "Fumble" and str(result[0]) != "Touchdown":
                         if gameInfo["possession"] == gameInfo["home name"]:
                             await normalKickoff(message, gameInfo, result, playType, difference,
-                                                str(gameInfo["away name"]), homeDiscordUser)
+                                                str(gameInfo["home name"]), str(gameInfo["away name"]), homeDiscordUser)
                         if gameInfo["possession"] == gameInfo["away name"]:
                             await normalKickoff(message, gameInfo, result, playType, difference,
-                                                str(gameInfo["home name"]), awayDiscordUser)
+                                                str(gameInfo["away name"]), str(gameInfo["home name"]), awayDiscordUser)
                     if str(result[0]) == "Fumble":
                         if gameInfo["possession"] == gameInfo["home name"]:
                             await fumbleKickoff(message, gameInfo, result, playType, difference,
@@ -691,6 +692,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + "**Result:** Two point conversion is successful\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "No Good":
@@ -701,6 +703,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + "**Result:** Two point conversion is unsuccessful\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "Defense 2PT":
@@ -717,6 +720,7 @@ async def twoPointResult(client, message, gameInfo, result, offenseTeam, defense
                                    + "**Result:** Two point conversion is unsuccessful and taken for a defensive two point conversion\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "TWO POINT", str(result[0]), "0", "0")
 
     updatePossession(message.channel, offenseTeam)
@@ -754,6 +758,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + "**Result:** PAT is successful\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "No Good":
@@ -764,6 +769,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + "**Result:** PAT is unsuccessful\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     elif str(result[0]) == "Defense 2PT":
@@ -779,6 +785,7 @@ async def patResult(client, message, gameInfo, result, offenseTeam, defenseTeam,
                                    + "**Result:** Two point conversion is unsuccessful and taken for a defensive two point conversion\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PAT", str(result[0]), "0", "0")
 
     updatePossession(message.channel, offenseTeam)
@@ -823,6 +830,7 @@ async def spikeResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + "**Result:** spike on 4th down for a turnover\n"
                                    + getScoreboardString(message, difference, down, defenseTeam, offenseDiscordUser))
         await messageUser(offenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(offenseDiscordUser.name) + "#" + str(offenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "SPIKE", "TURNOVER", "0", result[1])
 
     # Update the distance and down
@@ -840,6 +848,7 @@ async def spikeResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + "**Result:** spike\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "SPIKE", "INCOMPLETE", "0", result[1])
 
 
@@ -882,6 +891,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + "**Result:** kneels in the end zone for a safety\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, offenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "SAFETY", "-2", result[1])
 
     # Handle turnover on downs
@@ -900,6 +910,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + "**Result:** kneels on 4th down for a turnover\n"
                                    + getScoreboardString(message, difference, down, defenseTeam, offenseDiscordUser))
         await messageUser(offenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(offenseDiscordUser.name) + "#" + str(offenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "TURNOVER", "-2", result[1])
 
     # Update the distance and down
@@ -917,6 +928,7 @@ async def kneelResult(client, message, gameInfo, result, offenseTeam, defenseTea
                                    + "**Result:** kneels\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseDiscordUser))
         await messageUser(defenseDiscordUser, gameInfo)
+        updateWaitingOnUser(str(defenseDiscordUser.name) + "#" + str(defenseDiscordUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "KNEEL", "KNEEL", "-2", result[1])
 
 
@@ -973,6 +985,7 @@ async def fieldGoalMade(message, gameInfo, result, defenseUser, kickingTeam, dif
                                + "**Result:** " + str(fieldGoalDistance) + " yard field goal is **good**\n"
                                + getScoreboardString(message, difference, down, kickingTeam, defenseUser))
     await messageUser(defenseUser, gameInfo)
+    updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "GOOD", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -984,7 +997,6 @@ async def fieldGoalMiss(message, gameInfo, result, kickingUser, kickingTeam, def
 
     yardLine = convertYardLine(gameInfo)
     fieldGoalDistance = yardLine + 17
-    updatePossession(message.channel, defenseTeam)
 
     yardLine = convertYardLine(gameInfo)  # Line of scrimmage
     if yardLine >= 20:
@@ -998,6 +1010,7 @@ async def fieldGoalMiss(message, gameInfo, result, kickingUser, kickingTeam, def
 
     updatePlayType(message.channel, "NORMAL")
     updateClockStopped(message.channel, "YES")
+    updatePossession(message.channel, defenseTeam)
 
     convertTime(message.channel, gameInfo, result[1])
     updateDown(message.channel, 1)
@@ -1009,6 +1022,7 @@ async def fieldGoalMiss(message, gameInfo, result, kickingUser, kickingTeam, def
                                + "**Result:** " + str(fieldGoalDistance) + " yard field goal is **no good**\n"
                                + getScoreboardString(message, difference, down, defenseTeam, kickingUser))
     await messageUser(kickingUser, gameInfo)
+    updateWaitingOnUser(str(kickingUser.name) + "#" + str(kickingUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "MISS", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1020,7 +1034,6 @@ async def fieldGoalBlocked(message, gameInfo, result, kickingUser, defenseTeam, 
 
     yardLine = convertYardLine(gameInfo)
     fieldGoalDistance = yardLine + 17
-    updatePossession(message.channel, defenseTeam)
 
     yardLine = convertYardLine(gameInfo)  # Line of scrimmage
     if yardLine >= 20:
@@ -1034,6 +1047,7 @@ async def fieldGoalBlocked(message, gameInfo, result, kickingUser, defenseTeam, 
 
     updatePlayType(message.channel, "NORMAL")
     updateClockStopped(message.channel, "YES")
+    updatePossession(message.channel, defenseTeam)
 
     convertTime(message.channel, gameInfo, result[1])
     updateDown(message.channel, 1)
@@ -1045,6 +1059,7 @@ async def fieldGoalBlocked(message, gameInfo, result, kickingUser, defenseTeam, 
                                + "**Result:** " + str(fieldGoalDistance) + " yard field goal is **blocked**\n"
                                + getScoreboardString(message, difference, down, defenseTeam, kickingUser))
     await messageUser(kickingUser, gameInfo)
+    updateWaitingOnUser(str(kickingUser.name) + "#" + str(kickingUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "BLOCKED", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1079,6 +1094,7 @@ async def fieldGoalKickSix(message, gameInfo, result, kickingUser, kickingTeam, 
                                + "**Result:** " + str(fieldGoalDistance) + " yard field goal is blocked and returned for a **kick six**\n"
                                + getScoreboardString(message, difference, down, defenseTeam, kickingUser))
     await messageUser(kickingUser, gameInfo)
+    updateWaitingOnUser(str(kickingUser.name) + "#" + str(kickingUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "FIELD GOAL", "KICK SIX", str(fieldGoalDistance) + " ATTEMPT", result[1])
 
 
@@ -1156,6 +1172,7 @@ async def punt(message, result, puntUser, returnTeam, difference):
                                    + getScoreboardString(message, difference, down, returnTeam, puntUser))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT", str(puntYardage) + " NET YARD PUNT", result[1])
     await messageUser(puntUser, gameInfo)
+    updateWaitingOnUser(str(puntUser.name) + "#" + str(puntUser.discriminator))
 
 
 async def puntReturnTouchdown(message, result, puntUser, puntTeam, returnTeam, difference):
@@ -1183,6 +1200,7 @@ async def puntReturnTouchdown(message, result, puntUser, puntTeam, returnTeam, d
                                + "**Result:** Punt Return Touchdown\n"
                                + getScoreboardString(message, difference, down, returnTeam, puntUser))
     await messageUser(puntUser, gameInfo)
+    updateWaitingOnUser(str(puntUser.name) + "#" + str(puntUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT RETURN TD", "PUNT RETURN TD", result[1])
 
 
@@ -1212,6 +1230,7 @@ async def puntBlock(message, result, puntUser, returnTeam, difference):
                                + "**Result:** Blocked Punt\n"
                                + getScoreboardString(message, difference, down, returnTeam, puntUser))
     await messageUser(puntUser, gameInfo)
+    updateWaitingOnUser(str(puntUser.name) + "#" + str(puntUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT BLOCK", "PUNT BLOCK", result[1])
 
 
@@ -1241,6 +1260,7 @@ async def puntTouchback(message, result, puntUser, puntTeam, returnTeam, differe
                                + "**Result:** Touchback\n"
                                + getScoreboardString(message, difference, down, returnTeam, puntUser))
     await messageUser(puntUser, gameInfo)
+    updateWaitingOnUser(str(puntUser.name) + "#" + str(puntUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "PUNT", "TOUCHBACK", result[1])
 
 
@@ -1276,6 +1296,7 @@ async def puntFumble(message, result, returnUser, puntTeam, returnTeam, differen
                                    + "**Result:** Muffed punt in the end zone for a touchdown\n"
                                    + getScoreboardString(message, difference, down, puntTeam, returnUser))
         await messageUser(returnUser, gameInfo)
+        updateWaitingOnUser(str(returnUser.name) + "#" + str(returnUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFF PUNT TD", "MUFF PUNT TD", result[1])
     # Handle normal muff
     else:
@@ -1293,6 +1314,7 @@ async def puntFumble(message, result, returnUser, puntTeam, returnTeam, differen
                                    + "**Result:** Muffed punt\n"
                                    + getScoreboardString(message, difference, down, puntTeam, returnUser))
         await messageUser(returnUser, gameInfo)
+        updateWaitingOnUser(str(returnUser.name) + "#" + str(returnUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFFED PUNT", "MUFFED PUNT", result[1])
 
 
@@ -1322,6 +1344,7 @@ async def puntTeamTouchdown(message, result, returnUser, puntTeam, returnTeam, d
                                + "**Result:** Muffed Punt Touchdown\n"
                                + getScoreboardString(message, difference, down, puntTeam, returnUser))
     await messageUser(returnUser, gameInfo)
+    updateWaitingOnUser(str(returnUser.name) + "#" + str(returnUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, "PUNT", "MUFF PUNT TD", "MUFF PUNT TD", result[1])
 
 
@@ -1404,6 +1427,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                    + "**Result:** Touchdown\n"
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseUser))
         await messageUser(defenseUser, gameInfo)
+        updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TOUCHDOWN", str(yards), result[1])
 
     # Handle safety
@@ -1428,6 +1452,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                    + getScoreboardString(message, difference, down, offenseTeam, defenseUser))
 
         await messageUser(defenseUser, gameInfo)
+        updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "SAFETY", str(yards), result[1])
 
     # Handle a standard play
@@ -1478,6 +1503,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                        + getScoreboardString(message, difference, down, offenseTeam, defenseUser))
             await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "INCOMPLETE", str(yards), result[1])
             await messageUser(defenseUser, gameInfo)
+            updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
         elif turnoverOnDownsFlag:
             updateClockStopped(message.channel, "YES")
             await message.channel.send(offenseTeam + " doesn't get enough on 4th down! Turnover on downs!\n\n"
@@ -1485,6 +1511,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                        + getScoreboardString(message, difference, down, defenseTeam, offenseUser))
             await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "CHANGE OF POSSESSION", str(yards), result[1])
             await messageUser(offenseUser, gameInfo)
+            updateWaitingOnUser(str(offenseUser.name) + "#" + str(offenseUser.discriminator))
         else:
             if yards >= 0:
                 updateClockStopped(message.channel, "NO")
@@ -1493,6 +1520,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                            + getScoreboardString(message, difference, down, offenseTeam, defenseUser))
                 await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "GAIN", str(yards), result[1])
                 await messageUser(defenseUser, gameInfo)
+                updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
             else:
                 updateClockStopped(message.channel, "NO")
                 await message.channel.send(offenseTeam + " has a " + str(yards) + " yard loss!\n\n"
@@ -1500,6 +1528,7 @@ async def normalPlayType(message, gameInfo, result, playType, offenseUser, defen
                                            + getScoreboardString(message, difference, down, offenseTeam, defenseUser))
                 await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "LOSS", str(yards), result[1])
                 await messageUser(defenseUser, gameInfo)
+                updateWaitingOnUser(str(defenseUser.name) + "#" + str(defenseUser.discriminator))
 
 
 
@@ -1539,7 +1568,6 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100-yardLine
     updatedYardLine = updatedYardLine - turnoverDistance
-    updatePossession(message.channel, defenseTeam)
 
     # Handle touchdown
     if updatedYardLine <= 0:
@@ -1559,6 +1587,7 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
         newYardLine = convertYardLineBack(updatedYardLine, gameInfo)
         updateBallLocation(message.channel, newYardLine)
 
+    updatePossession(message.channel, defenseTeam)
     updateClockStopped(message.channel, "YES")
     updateDown(message.channel, "1")
     updateDistance(message.channel, "10")
@@ -1573,6 +1602,7 @@ async def turnoverType(message, gameInfo, result, playType, offenseUser, offense
 
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TURNOVER", "TURNOVER", result[1])
     await messageUser(offenseUser, gameInfo)
+    updateWaitingOnUser(str(offenseUser.name) + "#" + str(offenseUser.discriminator))
 
 
 async def defensiveTouchdown(message, gameInfo, result, playType, offenseUser, offenseTeam, defenseTeam, difference):
@@ -1604,6 +1634,7 @@ async def defensiveTouchdown(message, gameInfo, result, playType, offenseUser, o
                                + getScoreboardString(message, difference, down, defenseTeam, offenseUser))
 
     await messageUser(offenseUser, gameInfo)
+    updateWaitingOnUser(str(offenseUser.name) + "#" + str(offenseUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "TURNOVER TD", "TURNOVER TD", result[1])
 
 
@@ -1643,6 +1674,7 @@ async def fumbleReturnKickoff(message, gameInfo, result, playType, difference, k
                                + "**Result:** Fumble Touchdown by the Kicking Team\n"
                                + getScoreboardString(message, difference, down, kickingTeam, returnUser))
     await messageUser(returnUser, gameInfo)
+    updateWaitingOnUser(str(returnUser.name) + "#" + str(returnUser.discriminator))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF TD", "MUFFED KICKOFF TD", result[1])
     updatePlayType(message.channel, "TOUCHDOWN")
 
@@ -1674,10 +1706,11 @@ async def fumbleKickoff(message, gameInfo, result, playType, difference, kicking
                                + getScoreboardString(message, difference, down, kickingTeam, returnUser))
     await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "MUFFED KICKOFF", "MUFFED KICKOFF", result[1])
     await messageUser(returnUser, gameInfo)
+    updateWaitingOnUser(str(returnUser.name) + "#" + str(returnUser.discriminator))
     updatePlayType(message.channel, "NORMAL")
 
 
-async def normalKickoff(message, gameInfo, result, playType, difference, returnTeam, kickingUser):
+async def normalKickoff(message, gameInfo, result, playType, difference, kickingTeam, returnTeam, kickingUser):
     """
     Update the database and post the message for a standard kickoff
     
@@ -1705,6 +1738,20 @@ async def normalKickoff(message, gameInfo, result, playType, difference, returnT
                                    + getScoreboardString(message, difference, down, returnTeam, kickingUser))
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN", "RETURN TO THE " + str(gameInfo["yard line"]).upper(), result[1])
         updatePlayType(message.channel, "NORMAL")
+    elif str(result[0]) == "Recovered":
+        await message.channel.send("It's an onside kick.... AND " + kickingTeam.upper() + " RECOVERS IT!!\n\n"
+                                   + "**Result:** Successful onside kick\n"
+                                   + getScoreboardString(message, difference, down, returnTeam, kickingUser))
+        await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "ONSIDE KICK",
+                            "SUCCESS", result[1])
+        updatePlayType(message.channel, "NORMAL")
+    elif str(result[0]) == "No Good":
+        await message.channel.send("It's an onside kick.... and " + returnTeam + " falls on it.\n\n"
+                                   + "**Result:**Unsuccessful onside kick\n"
+                                   + getScoreboardString(message, difference, down, returnTeam, kickingUser))
+        await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "ONSIDE KICK",
+                            "UNSUCCESSFUL", result[1])
+        updatePlayType(message.channel, "NORMAL")
     elif str(result[0]) != "Returned TD":
         await message.channel.send("It's a kickoff taken by " + returnTeam + " to the " + gameInfo["yard line"] + "\n\n"
                                    + "**Result:** Return to the " + gameInfo["yard line"] + "\n"
@@ -1723,6 +1770,7 @@ async def normalKickoff(message, gameInfo, result, playType, difference, returnT
         await updateLogFile(message, getLogFile(gameInfo["gist link"]), gameInfo, playType.upper(), "KICKOFF RETURN TD", "KICKOFF RETURN TD", result[1])
         updatePlayType(message.channel, "TOUCHDOWN")
     await messageUser(kickingUser, gameInfo)
+    updateWaitingOnUser(str(kickingUser.name) + "#" + str(kickingUser.discriminator))
 
 
 
@@ -1746,9 +1794,11 @@ async def coinTossDecision(homeDiscordUser, awayDiscordUser, message, gameInfo):
         if str(message.author) == str(gameInfo["home user"]):
             updatePossession(message.channel, str(gameInfo["away name"]))
             await messageUser(homeDiscordUser, gameInfo)
+            updateWaitingOnUser(str(homeDiscordUser.name) + "#" + str(homeDiscordUser.discriminator))
         else:
             updatePossession(message.channel, str(gameInfo["home name"]))
             await messageUser(awayDiscordUser, gameInfo)
+            updateWaitingOnUser(str(awayDiscordUser.name) + "#" + str(awayDiscordUser.discriminator))
     # Handle a defer
     elif "defer" in message.content.lower().strip():
         await message.channel.send(message.author.mention + " chooses to defer to the second half. Waiting on a kickoff number from their opponent")
@@ -1756,9 +1806,11 @@ async def coinTossDecision(homeDiscordUser, awayDiscordUser, message, gameInfo):
         if str(message.author) == str(gameInfo["home user"]):
             updatePossession(message.channel, str(gameInfo["home name"]))
             await messageUser(awayDiscordUser, gameInfo)
+            updateWaitingOnUser(str(awayDiscordUser.name) + "#" + str(awayDiscordUser.discriminator))
         else:
             updatePossession(message.channel, str(gameInfo["away name"]))
             await messageUser(homeDiscordUser, gameInfo)
+            updateWaitingOnUser(str(homeDiscordUser.name) + "#" + str(homeDiscordUser.discriminator))
 
 
 async def coinToss(homeDiscordUser, awayDiscordUser, message, gameInfo):

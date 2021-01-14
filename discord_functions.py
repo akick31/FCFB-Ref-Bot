@@ -11,6 +11,7 @@ from game_database_functions import deleteGameData
 from game_database_functions import getGameInfo
 from game_database_functions import checkUserFree
 from game_database_functions import updateEmbeddedMessage
+from game_database_functions import getGameInfoTeam
 from github_functions import getLogFileURL
 from github_functions import getLogFile
 from github_functions import createLogFile
@@ -45,6 +46,7 @@ commandMessage = ("===================\nCOMMANDS\n===================\n"
                 + "&create - creates teams\n" 
                 + "&remove - removes teams\n"
                 + "&view - view user information\n"
+                + "&database - view the game database information\n"
                 + "===================\nPLAYBOOK FORMATTING\n===================\n"
                 + "Offensive Playbook: Flexbone, West Coast, Pro, Spread, Air Raid\n" 
                 + "Defensive Playbook: 3-4, 4-3, 4-4, 3-3-5, 5-2\n\n"
@@ -54,7 +56,8 @@ commandMessage = ("===================\nCOMMANDS\n===================\n"
                 + "&delete [HOME TEAM] vs [AWAY TEAM]\n" 
                 + "&create [TEAM NAME], [TEAM NICKNAME], [CONFERENCE], [DISCORD NAME (WITH THE # TAG AS WELL)], [COACH NAME], [OFFENSIVE PLAYBOOK], [DEFENSIVE PLAYBOOK]\n"
                 + "&remove [TEAM NAME]\n"
-                + "&view [TEAM NAME]\n")
+                + "&view [TEAM NAME]\n"
+                + "&database (In the game channel) OR &database [HOME TEAM] vs [AWAY TEAM]")
 
 
 async def createEmbed(client, gameChannel, homeTeam, awayTeam, url):
@@ -520,7 +523,60 @@ async def handleViewCommand(message):
             raise Exception
     else:
         return
-        
+
+
+async def handleDatabaseCommand(client, message):
+    """
+    Handle the database command, which displays the information for the game
+
+    """
+
+    if message.content.startswith('&database'):
+        try:
+            post = ''
+            if "vs" in message.content:
+                command = message.content.split('&database')[1].strip()
+                # Get all the information necessary to start a game
+                homeTeam = command.split("vs")[0].strip()
+                awayTeam = command.split("vs")[1].strip()
+                gameInfo = getGameInfoTeam(homeTeam)
+            else:
+                gameInfo = getGameInfo(message.channel)
+                if gameInfo is None:
+                    await message.channel.send("There was an issue getting game information. " +
+                                               "Are you in the game channel? If you are not in a " +
+                                               "game channel you must use [HOME TEAM] vs [AWAY TEAM] in your command")
+                    return
+
+            post = ("**" + gameInfo["home name"] + " vs " + gameInfo["away name"] + "**\n\n"
+                    + "Home User: " + gameInfo["home user"] + "\n"
+                    + "Away User: " + gameInfo["away user"] + "\n"
+                    + "Home Offensive Playbook: " + gameInfo["home offensive playbook"] + "\n"
+                    + "Away Offensive Playbook: " + gameInfo["away offensive playbook"] + "\n"
+                    + "Home Defensive Playbook: " + gameInfo["home defensive playbook"] + "\n"
+                    + "Away Offensive Playbook: " + gameInfo["away defensive playbook"] + "\n"
+                    + "Home Offensive Playbook: " + gameInfo["home offensive playbook"] + "\n"
+                    + "Coin Toss Winner: " + gameInfo["coin toss winner"] + "\n"
+                    + "Coin Toss Decision: " + gameInfo["coin toss decision"] + "\n"
+                    + "Quarter: " + str(gameInfo["quarter"]) + "\n"
+                    + "Time: " + gameInfo["time"] + "\n"
+                    + "Yard Line: " + gameInfo["yard line"] + "\n"
+                    + "Possession: " + gameInfo["possession"] + "\n"
+                    + "Waiting On: " + gameInfo["waiting on"] + "\n"
+                    + "Next Play Type: " + gameInfo["play type"] + "\n"
+                    + "Game Status: " + gameInfo["game status"] + "\n"
+                    + "Clock Stopped: " + gameInfo["clock stopped"] + "\n"
+                    + "Coin Toss Decision: " + gameInfo["coin toss decision"] + "\n"
+                    + "Number Submitted: " + gameInfo["number submitted"] + "\n"
+                    + "Halftime: " + gameInfo["halftime"] + "\n")
+            await message.channel.send(post)
+        except:
+            await message.channel.send("There was an issue getting the game information, please ensure you used the right command by using '&help' and then contact Dick")
+            print("There was an issue getting information for " + message.content.split('&database')[1].strip() + " due to " + str(Exception))
+            raise Exception
+
+
+
 
 def getCategory(client, categoryName):
     """
@@ -575,6 +631,9 @@ def loginDiscord():
                 
                 elif message.content.startswith('&view'):
                     await handleViewCommand(message)
+
+                elif message.content.startswith('&database'):
+                    await handleDatabaseCommand(client, message)
                    
                 elif message.content.startswith('&'):
                     await message.channel.send(helpMessage)
@@ -591,6 +650,9 @@ def loginDiscord():
                         await message.channel.send(helpMessage)
                     else:
                         await handleEndCommand(message)
+
+                elif message.content.startswith('&database'):
+                    await handleDatabaseCommand(client, message)
                         
                 elif message.content.startswith('&delete'):
                     category = getCategory(client, "Scrimmages")

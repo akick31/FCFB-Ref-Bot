@@ -4,6 +4,7 @@ openpyxlGameWorkbook = openpyxl.load_workbook('game_database.xlsx')
 ongoingGames = openpyxlGameWorkbook.worksheets[0]
 finishedGames = openpyxlGameWorkbook.worksheets[1]
 
+
 """
 Functions that modify the database or retrieve from the game database
 
@@ -137,20 +138,80 @@ def getGameInfoDM(user):
     
     return gameInfo
 
+
 def getGameInfo(channel):
     """
     Get the game info from the database
-    
+
     """
-    
+
     rowNum = 0
     for cell in ongoingGames['A']:
         if cell.value == str(channel.id):
             break
         else:
             rowNum = rowNum + 1
-            
+
     rowNum = rowNum + 1
+
+    gameInfo = {"channel id": ongoingGames.cell(row=rowNum, column=1).value,
+                "home name": ongoingGames.cell(row=rowNum, column=2).value,
+                "home nickname": ongoingGames.cell(row=rowNum, column=3).value,
+                "home user": ongoingGames.cell(row=rowNum, column=4).value,
+                "home offensive playbook": ongoingGames.cell(row=rowNum, column=5).value,
+                "home defensive playbook": ongoingGames.cell(row=rowNum, column=6).value,
+                "home score": ongoingGames.cell(row=rowNum, column=7).value,
+                "home timeouts": ongoingGames.cell(row=rowNum, column=8).value,
+                "home total yards": ongoingGames.cell(row=rowNum, column=9).value,
+                "home passing yards": ongoingGames.cell(row=rowNum, column=10).value,
+                "home rushing yards": ongoingGames.cell(row=rowNum, column=11).value,
+                "home interceptions": ongoingGames.cell(row=rowNum, column=12).value,
+                "home fumbles": ongoingGames.cell(row=rowNum, column=13).value,
+                "away name": ongoingGames.cell(row=rowNum, column=14).value,
+                "away nickname": ongoingGames.cell(row=rowNum, column=15).value,
+                "away user": ongoingGames.cell(row=rowNum, column=16).value,
+                "away offensive playbook": ongoingGames.cell(row=rowNum, column=17).value,
+                "away defensive playbook": ongoingGames.cell(row=rowNum, column=18).value,
+                "away score": ongoingGames.cell(row=rowNum, column=19).value,
+                "away timeouts": ongoingGames.cell(row=rowNum, column=20).value,
+                "away total yards": ongoingGames.cell(row=rowNum, column=21).value,
+                "away passing yards": ongoingGames.cell(row=rowNum, column=22).value,
+                "away rushing yards": ongoingGames.cell(row=rowNum, column=23).value,
+                "away interceptions": ongoingGames.cell(row=rowNum, column=24).value,
+                "away fumbles": ongoingGames.cell(row=rowNum, column=25).value,
+                "coin toss winner": ongoingGames.cell(row=rowNum, column=26).value,
+                "coin toss decision": ongoingGames.cell(row=rowNum, column=27).value,
+                "quarter": ongoingGames.cell(row=rowNum, column=28).value,
+                "time": ongoingGames.cell(row=rowNum, column=29).value,
+                "yard line": ongoingGames.cell(row=rowNum, column=30).value,
+                "down": ongoingGames.cell(row=rowNum, column=31).value,
+                "distance": ongoingGames.cell(row=rowNum, column=32).value,
+                "possession": ongoingGames.cell(row=rowNum, column=33).value,
+                "waiting on": ongoingGames.cell(row=rowNum, column=34).value,
+                "play type": ongoingGames.cell(row=rowNum, column=35).value,
+                "offensive number": ongoingGames.cell(row=rowNum, column=36).value,
+                "defensive number": ongoingGames.cell(row=rowNum, column=37).value,
+                "game status": ongoingGames.cell(row=rowNum, column=38).value,
+                "clock stopped": ongoingGames.cell(row=rowNum, column=39).value,
+                "gist link": ongoingGames.cell(row=rowNum, column=40).value,
+                "embedded message": ongoingGames.cell(row=rowNum, column=41).value,
+                "number submitted": ongoingGames.cell(row=rowNum, column=42).value,
+                "halftime": ongoingGames.cell(row=rowNum, column=43).value}
+
+    return gameInfo
+
+def getGameInfoTeam(homeTeam):
+    """
+    Get the game info from the database based on the home team
+    
+    """
+    
+    rowNum = 1
+    for cell in ongoingGames['B']:
+        if cell.value == str(homeTeam):
+            break
+        else:
+            rowNum = rowNum + 1
     
     gameInfo = {"channel id": ongoingGames.cell(row = rowNum, column = 1).value, 
                "home name": ongoingGames.cell(row = rowNum, column = 2).value,
@@ -440,17 +501,23 @@ def updateOnsideKickoffBallLocation(channel, homeTeam, awayTeam, result, possess
     yardLine = ""
 
     if possession == homeTeam and result == "Recovered":
-        yardLine = awayTeam + " 45"
+        yardLine = homeTeam + " 45"
+        updatePossession(channel, homeTeam)
     elif possession == homeTeam and result == "No Good":
         yardLine = homeTeam + " 45"
+        updatePossession(channel, awayTeam)
     elif possession == awayTeam and result == "Recovered":
-        yardLine = homeTeam + " 45"
+        yardLine = awayTeam + " 45"
+        updatePossession(channel, awayTeam)
     elif possession == awayTeam and result == "No Good":
         yardLine = awayTeam + " 45"
+        updatePossession(channel, homeTeam)
     elif possession == homeTeam and result == "Returned TD":
-        yardLine = awayTeam + " 3"
-    elif possession == awayTeam and result == "Returned TD":
         yardLine = homeTeam + " 3"
+        updatePossession(channel, awayTeam)
+    elif possession == awayTeam and result == "Returned TD":
+        yardLine = awayTeam + " 3"
+        updatePossession(channel, homeTeam)
     
     ongoingGames.cell(row = rowNum, column = 30).value = yardLine  # yard line
     openpyxlGameWorkbook.save('game_database.xlsx')
@@ -529,7 +596,34 @@ def updatePossession(channel, possessingTeam):
     
     ongoingGames.cell(row = rowNum, column = 33).value = possessingTeam  # possession
     openpyxlGameWorkbook.save('game_database.xlsx')
-    
+
+
+def updateWaitingOnUser(user):
+    """
+    Update the team waiting on
+
+    """
+
+    rowNum = 1
+    foundGame = False
+    for cell in ongoingGames['D']:
+        if cell.value == str(user):
+            foundGame = True
+            break
+        else:
+            rowNum = rowNum + 1
+    if foundGame is False:
+        rowNum = 1
+        for cell in ongoingGames['P']:
+            if cell.value == str(user):
+                break
+            else:
+                rowNum = rowNum + 1
+
+    waitingOn = user
+
+    ongoingGames.cell(row=rowNum, column=34).value = waitingOn  # waiting on
+    openpyxlGameWorkbook.save('game_database.xlsx')
  
 def updateWaitingOn(channel):
     """
@@ -547,16 +641,16 @@ def updateWaitingOn(channel):
     waitingOn = "NO ONE"
     
     gameInfo = getGameInfo(channel)
-    # if gameInfo["play type"] == "KICKOFF":
-    #     if gameInfo["possession"] == gameInfo["home name"]:
-    #         waitingOn = gameInfo["away user"]
-    #     elif gameInfo["possession"] == gameInfo["away name"]:
-    #         waitingOn = gameInfo["home user"]
-    # else:
-    if gameInfo["possession"] == gameInfo["home name"]:
-        waitingOn = gameInfo["home user"]
-    elif gameInfo["possession"] == gameInfo["away name"]:
-        waitingOn = gameInfo["away user"]
+    if gameInfo["play type"] == "KICKOFF":
+        if gameInfo["possession"] == gameInfo["home name"]:
+            waitingOn = gameInfo["away user"]
+        elif gameInfo["possession"] == gameInfo["away name"]:
+            waitingOn = gameInfo["home user"]
+    else:
+        if gameInfo["possession"] == gameInfo["home name"]:
+            waitingOn = gameInfo["home user"]
+        elif gameInfo["possession"] == gameInfo["away name"]:
+            waitingOn = gameInfo["away user"]
     
     ongoingGames.cell(row = rowNum, column = 34).value = waitingOn  # waiting on
     openpyxlGameWorkbook.save('game_database.xlsx')
