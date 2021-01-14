@@ -1152,11 +1152,11 @@ async def punt(message, result, puntUser, returnTeam, difference):
     updatedYardLine = yardLine - puntYardage
     updatedYardLine = 100-updatedYardLine  # Flip the yard line to the opponent's side
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
-    updatePossession(message.channel, returnTeam)
 
     updateBallLocation(message.channel, convertedYardLine)
     updatePlayType(message.channel, "NORMAL")
     updateClockStopped(message.channel, "YES")
+    updatePossession(message.channel, returnTeam)
 
     convertTime(message.channel, gameInfo, result[1])
     updateDown(message.channel, 1)
@@ -1216,11 +1216,11 @@ async def puntBlock(message, result, puntUser, returnTeam, difference):
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = 100 - yardLine
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
-    updatePossession(message.channel, returnTeam)
 
     updateBallLocation(message.channel, convertedYardLine)
     updatePlayType(message.channel, "NORMAL")
     updateClockStopped(message.channel, "YES")
+    updatePossession(message.channel, returnTeam)
 
     convertTime(message.channel, gameInfo, result[1])
     updateDown(message.channel, 1)
@@ -1228,7 +1228,7 @@ async def puntBlock(message, result, puntUser, returnTeam, difference):
     gameInfo = getGameInfo(message.channel)
     down = convertDown(str(gameInfo["down"]))
 
-    await message.channel.send(returnTeam + " BLOCKS THE PUNT!\n\n"
+    await message.channel.send(returnTeam.upper() + " BLOCKS THE PUNT!\n\n"
                                + "**Result:** Blocked Punt\n"
                                + getScoreboardString(message, difference, down, returnTeam, puntUser))
     await messageUser(puntUser, gameInfo)
@@ -1276,12 +1276,12 @@ async def puntFumble(message, result, returnUser, puntTeam, returnTeam, differen
     yardLine = convertYardLine(gameInfo)
     updatedYardLine = int(yardLine) - 40
     convertedYardLine = convertYardLineBack(updatedYardLine, gameInfo)
-    updatePossession(message.channel, returnTeam)
 
     # Handle touchdown
     if updatedYardLine <= 0:
         updateBallLocation(message.channel, returnTeam + " 3")
         updatePlayType(message.channel, "TOUCHDOWN")
+        updatePossession(message.channel, puntTeam)
         if puntTeam == gameInfo["home name"]:
             updateHomeScore(message.channel, int(gameInfo["home score"]) + 6)
         elif puntTeam == gameInfo["away name"]:
@@ -1305,6 +1305,7 @@ async def puntFumble(message, result, returnUser, puntTeam, returnTeam, differen
         updateBallLocation(message.channel, convertedYardLine)
         updatePlayType(message.channel, "NORMAL")
         updateClockStopped(message.channel, "YES")
+        updatePossession(message.channel, puntTeam)
 
         convertTime(message.channel, gameInfo, result[1])
         updateDown(message.channel, 1)

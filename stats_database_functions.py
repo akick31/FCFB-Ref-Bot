@@ -182,7 +182,7 @@ def updatePuntResult(result):
     rowNum = 1
 
     # Find the latest row
-    for cell in normalKickoffs['A']:
+    for cell in punts['A']:
         if cell.value is None or cell.value == "":
             break
         else:
